@@ -76,11 +76,6 @@
  :root .island-hero[data-scene-phase=night] .island-hero-copy h1 em{color:#fff1bd}
  :root[data-scene-phase=night] body[data-page=home] .site-header:not(.scrolled){color:#fff7df}
 }
-@media(max-width:700px){
- .island-hero[data-scene-phase=night]:not([data-scene-art=snow]){height:max(850px,216.4vw);background:#bfae9c}
- .island-hero[data-scene-phase=night]:not([data-scene-art=snow]) .island-hero-copy{top:180px}
- .island-hero[data-scene-phase=night]:not([data-scene-art=snow]) .island-hero-copy h1{font-size:34px}
-}
 :root .island-hero .island-weather{background:#fffdf5e8;color:#2d4031;border-color:#fff9}
 :root .island-hero .weather-mini-clock{border-color:#33472c26}
 
@@ -113,5 +108,5 @@
 .island-hero[data-scene-weather=fog] .scene-haze{opacity:1;background:linear-gradient(180deg,transparent 12%,#e5eee36b 40%,#e5eee3b3 74%,transparent)}
 @keyframes scene-cloud-drift{from{translate:-4% -1%}to{translate:4% 2%}}
 @keyframes scene-soft-lightning{0%,77%,83%,100%{opacity:0}79%{opacity:.34}81%{opacity:.08}}
-@media(max-width:700px){.island-hero:after{height:445px}.island-hero-copy{top:205px}.island-hero[data-scene-phase=night]:not([data-scene-art=snow]) .island-hero-copy{top:205px}}
+@media(max-width:700px){.island-hero:after{height:445px}.island-hero-copy{top:205px}}
 @media(prefers-reduced-motion:reduce){.island-hero[data-scene-weather=storm] .scene-lightning{animation:none;opacity:.08}.scene-clouds{animation:none}}

@@ -14,14 +14,39 @@ const ART = {
   summer:{src:'./assets/hero-v3/summer-hanok-web.jpg',mobile:'./assets/hero-v3/summer-hanok-mobile.jpg',key:'hanok',source:'Hanok Wallpaper'},
   autumn:{src:'./assets/hero-v3/autumn-bbq-web.jpg',mobile:'./assets/hero-v3/autumn-bbq-mobile.jpg',key:'bbq',source:'BBQ Party Wallpaper'},
   winter:{src:'./assets/hero-v3/winter-snow-web.jpg',mobile:'./assets/hero-v3/winter-snow-mobile.jpg',key:'snow',source:'Merry Christmas Wallpaper'},
-  night:{src:'./assets/hero-v3/night-guitar-mobile.jpg',mobile:'./assets/hero-v3/night-guitar-mobile.jpg',key:'guitar',source:'Late Night Guitar Wallpaper'},
 };
+// Only complete, matching landscape/portrait pairs enter the random cover pool.
+const COVER_ART = [ART.summer, ART.autumn, ART.winter];
+const PREVIOUS_COVER = 'slow-notes-previous-cover';
+const heroCovers = new WeakMap();
+let previousCover;
 let mounted = false, observer, timer, lastSignature = '';
 const finite = Number.isFinite;
 const rad = value => value * Math.PI / 180;
 const read = (key, fallback) => {try{return JSON.parse(localStorage.getItem(key)) ?? fallback;}catch{return fallback;}};
 const validCity = city => city && finite(city.latitude) && Math.abs(city.latitude)<=90 && finite(city.longitude) && Math.abs(city.longitude)<=180;
 const cityKey = city => `${city.latitude.toFixed(4)},${city.longitude.toFixed(4)}`;
+
+/** Uniform choice among the other scenes; refreshes remember the previous cover. */
+export function chooseCoverArt(previousKey, random = Math.random) {
+  const choices = COVER_ART.filter(art => art.key !== previousKey);
+  return choices[Math.floor(random() * choices.length)];
+}
+
+function coverFor(hero, state, context) {
+  const signature = [state.season,state.phase,state.condition,state.weatherEffect,
+    state.city,context.city.latitude,context.city.longitude,context.theme,context.themeMode].join('|');
+  const existing = heroCovers.get(hero);
+  if(existing?.signature === signature) return existing.art;
+  if(previousCover === undefined) {
+    try {previousCover = sessionStorage.getItem(PREVIOUS_COVER);} catch {previousCover = null;}
+  }
+  const art = chooseCoverArt(previousCover);
+  previousCover = art.key;
+  try {sessionStorage.setItem(PREVIOUS_COVER, art.key);} catch { /* In-memory fallback. */ }
+  heroCovers.set(hero, {signature, art});
+  return art;
+}
 
 /** Calendar seasons; the southern hemisphere is shifted by six months. */
 export function seasonAt(date = new Date(), latitude = 30.2741, timeZone = TZ) {
@@ -92,7 +117,7 @@ export function deriveSceneState({date=new Date(),city=DEFAULT_CITY,weather=null
     phaseSource='manual-theme';
   }
   const effect=resolveWeatherEffect(condition,weatherEffect), kind=effect.condition;
-  const art=phase==='night' && season!=='winter' ? {...ART[season],mobile:ART.night.mobile,mobileSource:ART.night.source} : ART[season];
+  const art=ART[season];
   return {season,phase,...effect,city:typeof city.name==='string'?city.name:'所选城市',latitude:city.latitude,phaseSource,art,
     label:`${SEASON_NAMES[season]} · ${PHASE_NAMES[phase]} · ${WEATHER_NAMES[kind]}`};
 }
@@ -122,14 +147,16 @@ function currentContext() {
 /** Call after rendering the homepage. Safe to call repeatedly on every route. */
 export function syncScene() {
   if(typeof document==='undefined') return null;
-  const state=deriveSceneState(currentContext());
+  const context=currentContext();
+  const state=deriveSceneState(context);
   const root=document.documentElement;
   root.dataset.sceneSeason=state.season;root.dataset.scenePhase=state.phase;root.dataset.sceneWeather=state.condition;
   root.dataset.sceneActualWeather=state.actualCondition;root.dataset.sceneWeatherMode=state.weatherMode;
   const hero=document.querySelector('.island-hero');
   if(!hero) return state;
   ensureLayers(hero);
-  const signature=[state.season,state.phase,state.condition,state.actualCondition,state.weatherMode,state.city,state.phaseSource].join('|');
+  state.art=coverFor(hero,state,context);
+  const signature=[state.season,state.phase,state.condition,state.actualCondition,state.weatherMode,state.city,state.phaseSource,state.art.key].join('|');
   if(lastSignature===signature && hero.dataset.sceneSignature===signature) return state;
   lastSignature=signature;hero.dataset.sceneSignature=signature;
   hero.dataset.sceneSeason=state.season;hero.dataset.scenePhase=state.phase;hero.dataset.sceneWeather=state.condition;
