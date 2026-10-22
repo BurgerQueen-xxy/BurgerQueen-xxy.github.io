@@ -13,8 +13,10 @@ function safeLink(value) {
   return href;
 }
 
-function safeImage(value) {
+export function safeImage(value) {
   if (/[\u0000-\u0020\u007f\\]/.test(value)) return null;
+  // Only content-addressed media endpoints; arbitrary API paths stay private.
+  if (/^\/(?:site-media\/[a-f0-9]{64}\.webp|api\/media\/[a-f0-9]{64})$/.test(value)) return value;
   if (/^https:\/\//i.test(value)) {
     try {
       const url = new URL(value);
@@ -126,7 +128,7 @@ export function parsePost(source, slug) {
   }
   if (!/^\d{4}-\d{2}-\d{2}$/.test(metadata.date) || new Date(metadata.date).toISOString().slice(0, 10) !== metadata.date) throw new Error(`${slug}.md 的日期须为有效的 YYYY-MM-DD`);
   if (!Array.isArray(metadata.tags) || !metadata.tags.every((tag) => typeof tag === 'string')) throw new Error(`${slug}.md 的 tags 必须是字符串数组`);
-  if (!/^assets\/[a-zA-Z0-9_./-]+$/.test(metadata.cover) || metadata.cover.split('/').includes('..')) throw new Error(`${slug}.md 的封面必须使用 assets/ 下的相对路径`);
+  if (!safeImage(metadata.cover) || /^https:/i.test(metadata.cover)) throw new Error(`${slug}.md 的封面必须使用 assets/ 下的相对路径或已上传的本站图片`);
   return {
     slug,
     title: metadata.title,

@@ -4,7 +4,7 @@ import path from 'node:path';
 import { root, build, validatePostContent } from './build.mjs';
 import { renderMarkdown } from './markdown.mjs';
 
-for (const filename of ['app.js', 'scripts/markdown.mjs', 'scripts/build.mjs', 'scripts/server.mjs', 'scripts/check.mjs']) {
+for (const filename of ['app.js', 'theme.js', 'pet.js', 'content-client.mjs', 'scripts/markdown.mjs', 'scripts/build.mjs', 'scripts/build-router.mjs', 'scripts/server.mjs', 'scripts/check.mjs', 'scripts/check-runtime.mjs']) {
   const result = spawnSync(process.execPath, ['--check', path.join(root, filename)], { stdio: 'inherit' });
   if (result.status !== 0) process.exit(result.status || 1);
 }

@@ -1,4 +1,7 @@
 import { mountPet } from './pet.js';
+import { renderIsland, syncIsland, categoryArt, weatherIcon, renderStoryCards, renderPassport, syncPassport } from './modules/island.js';
+import { mountWidgets, syncWidgets } from './modules/widgets.js';
+import { loadContent } from './content-client.mjs';
 
 const icons = {
   arrow: '<path d="M4 12h15m-6-6 6 6-6 6"/>',
@@ -48,7 +51,7 @@ function categoryTabs() {
 
 function postRow(post, index = 0) {
   return `<article class="post-row" style="--row-index:${index}">
-    <a class="post-cover cover-${index % 3}" href="${postUrl(post)}" tabindex="-1" aria-hidden="true"><img src="./${escape(post.cover)}" alt="" loading="lazy" width="480" height="320"></a>
+    <a class="post-cover cover-${index % 3}" href="${postUrl(post)}" tabindex="-1" aria-hidden="true">${categoryArt(post,site.categories)}</a>
     <div class="post-summary"><div class="post-meta"><span>${escape(post.category)}</span><span class="meta-dot">·</span><time datetime="${escape(post.date)}">${dateLabel(post.date)}</time></div>
       <h3><a href="${postUrl(post)}">${escape(post.title)}</a></h3><p>${escape(post.excerpt)}</p>
       <div class="post-bottom"><span>${icon('clock')} ${escape(post.readingTime)}${post.readingTime.includes('阅读') ? '' : '阅读'}</span><a class="post-arrow" href="${postUrl(post)}" aria-label="阅读：${escape(post.title)}">${icon('arrow')}</a></div>
@@ -61,11 +64,7 @@ function profile() {
 
 function filteredPosts() { return filter === '全部' ? posts : posts.filter(post => post.category === filter); }
 
-function home() {
-  return `<section class="hero" aria-labelledby="hero-title"><div class="hero-copy"><h1 id="hero-title">日子很小，<br><span>生活很可爱。</span></h1><p>记录一些日常、灵感和不着急的成长。<br>和布拉吉奥一起，慢慢来就好。</p><div class="hero-actions"><a class="button primary" href="#/journal">翻开我的手记 ${icon('arrow')}</a><button class="text-link" data-random>随便逛逛</button></div></div>
-    <div class="hero-scene"><div class="scene-circle" aria-hidden="true"></div><span class="scene-note">take it slow.</span><button class="brachio-button" data-greet aria-label="和布拉吉奥打个招呼"><img class="hero-brachio" src="./assets/brachio-original.svg" alt="JOGUMAN 官方原版布拉吉奥" width="272" height="306" fetchpriority="high"></button><img class="hero-woody" src="./assets/woody.png" alt="JOGUMAN 伍迪" width="80" height="170"><span class="scene-spark spark-one" aria-hidden="true">✳</span><span class="scene-spark spark-two" aria-hidden="true">✳</span><div class="scene-ground" aria-hidden="true"></div><p class="scene-caption" id="greeting" aria-live="polite">今天也有好好生活。</p></div></section>
-    <nav class="club-strip" aria-label="六位小伙伴的栏目">${(site.categories||[]).map(c=>`<a href="${categoryUrl(c.name)}"><div class="club-character"><img src="./${escape(c.asset)}" alt="" width="90" height="90" loading="lazy"></div><strong>${escape(c.name)}</strong><span>${escape(c.character)}</span></a>`).join('')}</nav><section class="home-content" aria-labelledby="journal-title"><div class="journal-column"><div class="section-heading"><div><h2 id="journal-title">最近的手记</h2><p>little things, lately</p></div>${linkArrow('#/journal','全部文章')}</div><div id="post-list" class="post-list">${renderPosts(3)}</div></div>${profile()}</section>`;
-}
+function home() { return renderIsland(site, posts); }
 
 function renderPosts(limit) {
   const items = filteredPosts();
@@ -77,7 +76,8 @@ function categoryPage(name) {
   if(!category) return notFound();
   filter=name;
   document.title=`${name} · ${category.character} · ${site.name}`;
-  return `<section class="page-intro category-intro"><div><p class="page-english">${escape(category.englishName)} / ${escape(category.character)}</p><h1>${name==='金子'?'金子的小小世界':escape(name)}</h1><p>${escape(category.description)}</p></div><img src="./${escape(category.asset)}" alt="${escape(category.character)}" width="95" height="130"></section><section class="journal-layout"><div><div class="category-summary"><span>${filteredPosts().length} 篇手记</span>${name==='收藏'?linkArrow('#/little-things?tab=saved','我的阅读书签'):linkArrow('#/journal','全部手记')}</div><div id="post-list" class="post-list">${renderPosts()}</div></div><aside class="category-sidebar"><h2>六位小伙伴</h2><div class="category-directory">${(site.categories||[]).map(c=>`<a href="${categoryUrl(c.name)}" class="${c.name===name?'active':''}" ${c.name===name?'aria-current="page"':''}><img src="./${escape(c.asset)}" alt="" width="35" height="44"><span><strong>${escape(c.name)}</strong><small>${escape(c.character)}</small></span>${icon('arrow')}</a>`).join('')}</div></aside></section>`;
+  const selected=filteredPosts();
+  return `<section class="page-intro category-intro"><div><p class="page-english">${escape(category.englishName)} / ${escape(category.character)}</p><h1>${name==='金子'?'金子的小小世界':escape(name)}</h1><p>${escape(category.description)}</p></div><img src="./${escape(category.asset)}" alt="${escape(category.character)}" width="95" height="130"></section><div class="category-summary"><span>${selected.length} 篇手记</span>${name==='收藏'?linkArrow('#/little-things?tab=saved','我的阅读书签'):linkArrow('#/journal','全部手记')}</div><section class="catalog-grid ${selected.length?'story-grid':''}" id="post-list">${selected.length?renderStoryCards(site,posts,selected):renderPosts()}</section><nav class="category-paths" aria-label="六位小伙伴">${site.categories.map(c=>`<a href="${categoryUrl(c.name)}"><img src="./${escape(c.asset)}" alt="">${escape(c.name)}</a>`).join('')}</nav>`;
 }
 
 function journal() {
@@ -97,9 +97,7 @@ function littleContent() {
   return `<div class="collection-list">${(site.collections || []).map((c,i) => `<article class="collection-item"><div class="collection-art collection-art-${i%3}">${icon(i%2 ? 'leaf' : 'book')}<span>${String(i+1).padStart(2,'0')}</span></div><div><span class="post-meta">${escape(c.kind)}</span><h2>${escape(c.title)}</h2><p>${escape(c.note)}</p></div></article>`).join('')}</div>`;
 }
 
-function about() {
-  return `<section class="about-page"><div class="about-portrait"><div class="portrait-paper"><img src="./assets/brachio.png" alt="官方布拉吉奥角色" width="140" height="275"><span>nice to meet you!</span></div><p>${escape(site.location || '在自己的小小世界里')}</p></div><div class="about-copy"><p class="page-english">A LITTLE ABOUT ME</p><h1>你好，我是${escape(site.author)}。</h1><p class="about-lead">${escape(site.bio || '一个认真生活、偶尔发呆的人。')}</p><p>欢迎来到「${escape(site.name)}」。这里放着平凡日子里的小发现：一段喜欢的文字，一次没有计划的散步，或者一件让心情突然变好的小事。</p><p>我喜欢布拉吉奥简单又有点倔强的样子，也喜欢它认真对待小小生活的态度。所以，把这片小天地装扮成了它的模样。</p><blockquote>不用每一天都很特别。<br>有在好好生活，就已经很好。</blockquote><p>如果你也刚好路过，希望这里能让你放慢一会儿。</p>${linkArrow('#/journal','从一篇手记开始')}<div class="about-notice"><p>${escape(site.sampleNotice || "")}</p><p>非 JOGUMAN 官方网站。角色原图 © JOGUMAN，来自 <a href="https://www.joguman.com/" target="_blank" rel="noopener noreferrer">JOGUMAN 官网</a>。</p></div></div></section>`;
-}
+function about() { return renderPassport(site,posts); }
 
 function detail(slug) {
   const post = posts.find(p => p.slug === slug);
@@ -107,7 +105,7 @@ function detail(slug) {
   const isSaved = saved.includes(slug);
   document.title = `${post.title} · ${site.name}`;
   const index = posts.indexOf(post);
-  return `<article class="article-page"><div class="article-back">${linkArrow('#/journal','回到手记','back-link')}</div><header class="article-header"><div class="post-meta"><a href="#/journal?category=${encodeURIComponent(post.category)}">${escape(post.category)}</a><span>·</span><time datetime="${escape(post.date)}">${dateLabel(post.date)}</time><span>·</span><span>${escape(post.readingTime)}阅读</span></div><h1>${escape(post.title)}</h1><p>${escape(post.excerpt)}</p></header><img class="article-cover" src="./${escape(post.cover)}" alt="${escape(post.title)} · 封面" width="1000" height="600"><div class="article-body">${post.body}</div><div class="article-tags">${(post.tags || []).map(t=>`<a href="#/journal?search=${encodeURIComponent(t)}"># ${escape(t)}</a>`).join('')}</div><div class="article-actions"><button class="button ${isSaved?'saved':''}" data-bookmark="${escape(slug)}" aria-pressed="${isSaved}">${icon('bookmark')} ${isSaved?'已收藏':'收藏这篇'}</button><button class="button" data-copy>${icon('link')} 复制文章链接</button></div><div class="article-end"><img src="./assets/woody.png" alt="" width="34" height="73"><p>谢谢你，读到了这里。<br><span>愿你今天也遇见一件小小的好事。</span></p></div><nav class="article-pagination" aria-label="相邻文章">${index>0?`<a href="${postUrl(posts[index-1])}"><small>上一篇</small><span>${escape(posts[index-1].title)}</span></a>`:'<span></span>'}${index<posts.length-1?`<a href="${postUrl(posts[index+1])}"><small>下一篇</small><span>${escape(posts[index+1].title)}</span></a>`:'<span></span>'}</nav></article>`;
+  return `<article class="article-page"><div class="article-back">${linkArrow('#/journal','回到手记','back-link')}</div><header class="article-header"><div class="post-meta"><a href="#/journal?category=${encodeURIComponent(post.category)}">${escape(post.category)}</a><span>·</span><time datetime="${escape(post.date)}">${dateLabel(post.date)}</time><span>·</span><span>${escape(post.readingTime)}阅读</span></div><h1>${escape(post.title)}</h1><p>${escape(post.excerpt)}</p></header>${categoryArt(post,site.categories,'article-cover')}<div class="article-body">${post.body}</div><div class="article-tags">${(post.tags || []).map(t=>`<a href="#/journal?search=${encodeURIComponent(t)}"># ${escape(t)}</a>`).join('')}</div><div class="article-actions"><button class="button ${isSaved?'saved':''}" data-bookmark="${escape(slug)}" aria-pressed="${isSaved}">${icon('bookmark')} ${isSaved?'已收藏':'收藏这篇'}</button><button class="button" data-copy>${icon('link')} 复制文章链接</button></div><div class="article-end"><img src="./assets/woody.png" alt="" width="34" height="73"><p>谢谢你，读到了这里。<br><span>愿你今天也遇见一件小小的好事。</span></p></div><nav class="article-pagination" aria-label="相邻文章">${index>0?`<a href="${postUrl(posts[index-1])}"><small>上一篇</small><span>${escape(posts[index-1].title)}</span></a>`:'<span></span>'}${index<posts.length-1?`<a href="${postUrl(posts[index+1])}"><small>下一篇</small><span>${escape(posts[index+1].title)}</span></a>`:'<span></span>'}</nav></article>`;
 }
 
 function notFound() { return `<div class="empty-state page-empty"><img src="./assets/brachio.png" width="55" height="108" alt="布拉吉奥"><h1>好像走到了一条小岔路。</h1><p>这篇手记还没有写好，先回去逛逛吧。</p>${linkArrow('#/','回到首页')}</div>`; }
@@ -128,6 +126,13 @@ function render() {
   else if (currentPage==='post') { try { content=detail(decodeURIComponent(pathname.slice(6))); } catch { content=notFound(); } }
   else content=notFound();
   $('#main').innerHTML = content;
+  document.body.dataset.page = currentPage;
+  $('#mobile-menu').hidden = true;
+  document.querySelector('.mobile-more')?.setAttribute('aria-expanded','false');
+  $('.site-header').classList.toggle('scrolled', currentPage !== 'home' || window.scrollY > 90);
+  if(currentPage === 'home') syncIsland();
+  if(currentPage === 'about') syncPassport();
+  syncWidgets();
   document.querySelectorAll('[data-nav]').forEach(el => {
     const selectedCategory=currentPage==='post'?posts.find(p=>postUrl(p)===location.hash)?.category:filter;
     const active = el.dataset.nav === currentPage || (el.dataset.nav===selectedCategory && ['category','post'].includes(currentPage));
@@ -153,10 +158,13 @@ function openSearch(query='') {
 }
 
 $('#search-toggle').innerHTML=icon('search');
+$('#weather-toggle').innerHTML=weatherIcon();
+$('#music-toggle').innerHTML='<svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 18V5l12-2v13M9 8l12-2"/><ellipse cx="6" cy="18" rx="3" ry="2.5"/><ellipse cx="18" cy="16" rx="3" ry="2.5"/></svg>';
 $('#search-close').innerHTML=icon('close');
 $('#search-field-icon').innerHTML=icon('search');
 $('#back-top').innerHTML=icon('up');
 syncTheme();
+document.addEventListener('slow-theme-change',syncTheme);
 mountPet({trigger:'#pet-toggle'});
 $('#theme-toggle').addEventListener('click',()=>{
   const dark = document.documentElement.dataset.theme !== 'dark';
@@ -171,8 +179,11 @@ $('#search-results').addEventListener('click',e=>{if(e.target.closest('a'))$('#s
 $('.skip-link').addEventListener('click',e=>{e.preventDefault();$('#main').focus();$('#main').scrollIntoView({behavior:'instant'});});
 $('#search-dialog').addEventListener('click',e=> { if(e.target===$('#search-dialog')) {const r=e.target.getBoundingClientRect();if(e.clientX<r.left||e.clientX>r.right||e.clientY<r.top||e.clientY>r.bottom)e.target.close();} });
 $('#back-top').addEventListener('click',()=>window.scrollTo({top:0,behavior:matchMedia('(prefers-reduced-motion: reduce)').matches?'instant':'smooth'}));
+$('#mobile-menu-close').addEventListener('click',()=>{ $('#mobile-menu').hidden=true; document.querySelector('.mobile-more')?.setAttribute('aria-expanded','false'); });
+document.addEventListener('click',e=>{if(!$('#mobile-menu').hidden&&!e.target.closest('#mobile-menu,.mobile-more')){$('#mobile-menu').hidden=true;document.querySelector('.mobile-more')?.setAttribute('aria-expanded','false');}});
 document.addEventListener('keydown',e=>{
   if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase()==='k') {e.preventDefault();openSearch();}
+  else if(e.key==='Escape'&&!$('#mobile-menu').hidden){$('#mobile-menu').hidden=true;document.querySelector('.mobile-more')?.setAttribute('aria-expanded','false');document.querySelector('.mobile-more')?.focus();}
   else if (e.key==='/' && !e.target.matches('input,textarea,[contenteditable]')) {e.preventDefault();openSearch();}
 });
 document.addEventListener('click',async e=>{
@@ -206,6 +217,7 @@ document.addEventListener('click',async e=>{
   }
 });
 window.addEventListener('scroll',()=>{
+  $('.site-header').classList.toggle('scrolled',currentPage!=='home'||window.scrollY>90);
   $('#back-top').hidden=window.scrollY<450;
   if(currentPage==='post') {const max=document.documentElement.scrollHeight-innerHeight;$('#reading-progress').style.width=`${max>0?Math.min(100,scrollY/max*100):100}%`;}
 },{passive:true});
@@ -213,17 +225,19 @@ window.addEventListener('hashchange',()=>{render();$('#main').focus({preventScro
 
 async function init() {
   try {
-    const responses=await Promise.all([fetch('./data/posts.json'),fetch('./data/site.json')]);
-    if(responses.some(r=>!r.ok)) throw new Error('无法读取博客内容');
-    [posts,site]=await Promise.all(responses.map(r=>r.json()));
+    ({ posts, site } = await loadContent());
     saved=saved.filter(slug=>posts.some(p=>p.slug===slug));
     categories=['全部',...(site.categories||[]).map(c=>c.name)];
     document.querySelector('meta[name="description"]').content=site.description;
     $('.brand').setAttribute('aria-label',`${site.name} 首页`);
-    $('.main-nav').innerHTML=`<a href="#/" data-nav="home">首页</a>${(site.categories||[]).map(c=>`<a href="${categoryUrl(c.name)}" data-nav="${escape(c.name)}" title="${escape(c.character)}">${escape(c.name)}</a>`).join('')}<a href="#/about" data-nav="about">关于</a>`;
+    $('.main-nav').innerHTML=`${(site.categories||[]).map(c=>`<a href="${categoryUrl(c.name)}" data-nav="${escape(c.name)}" title="${escape(c.character)}"><img class="nav-character" src="./${escape(c.asset)}" alt=""><span>${escape(c.name)}</span></a>`).join('')}<a href="#/about" data-nav="about"><img class="nav-passport" src="./assets/ubhc-logo.jpg" alt=""><span>护照</span></a><button class="mobile-more" aria-expanded="false" aria-controls="mobile-menu"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="5" cy="12" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="19" cy="12" r="2"/></svg><span>更多</span></button>`;
+    $('#mobile-menu-links').innerHTML=`${site.categories.map(c=>`<a href="${categoryUrl(c.name)}"><img src="./${escape(c.asset)}" alt="">${escape(c.name)}</a>`).join('')}<a href="#/journal">全部手记</a><a href="#/about">生活护照</a><a href="#/little-things?tab=saved">阅读书签</a><button id="mobile-pet-toggle">布拉吉奥小伙伴</button>`;
+    $('#mobile-pet-toggle').addEventListener('click',()=>{$('#pet-toggle').click();});
+    document.querySelector('.mobile-more').addEventListener('click',()=>{const open=$('#mobile-menu').hidden;$('#mobile-menu').hidden=!open;document.querySelector('.mobile-more').setAttribute('aria-expanded',String(open));});
     document.querySelectorAll('[data-site-name]').forEach(el=>el.textContent=site.name);
     document.querySelectorAll('[data-english-name]').forEach(el=>el.textContent=site.englishName);
     $('#year').textContent=String(new Date().getFullYear());
+    mountWidgets({site,posts});
     render();
   } catch(error) {
     $('#main').innerHTML='<div class="empty-state page-empty"><h1>手记还没翻开。</h1><p>暂时没能读取内容，请刷新页面再试一次。</p><button class="button primary" id="retry">重新打开</button></div>';

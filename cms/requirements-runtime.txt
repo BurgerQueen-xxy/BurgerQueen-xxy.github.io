@@ -1,0 +1,6 @@
+# Python 3.11+; install on the target platform or supply matching ARM64 musl wheels.
+# Verified locally with FastAPI 0.159.1, uvicorn 0.54.0 and Pillow 13.0.0.
+fastapi>=0.140.0,<1
+uvicorn>=0.51.0,<1
+Pillow>=12.3.0,<14
+mutagen==1.47.0

@@ -10,7 +10,9 @@
   <link rel="apple-touch-icon" href="./assets/ubhc-logo.jpg">
   <link rel="stylesheet" href="./styles.css">
   <link rel="stylesheet" href="./pet.css">
-  <script>try{if(localStorage.getItem('slow-notes-theme')==='dark')document.documentElement.dataset.theme='dark'}catch{}</script>
+  <link rel="stylesheet" href="./modules/island.css">
+  <link rel="stylesheet" href="./modules/widgets.css">
+  <script src="./theme.js"></script>
   <script src="./app.js" type="module"></script>
 </head>
 <body>
@@ -28,11 +30,14 @@
       <a href="#/about" data-nav="about">关于我</a>
     </nav>
     <div class="header-actions">
+      <button class="icon-button" id="weather-toggle" aria-label="天气与时间" title="天气与时间"></button>
       <button class="icon-button" id="search-toggle" aria-label="搜索文章" title="搜索文章（Ctrl K）"></button>
+      <button class="icon-button" id="music-toggle" aria-label="打开音乐播放器" title="慢慢电台"></button>
       <button class="icon-button" id="theme-toggle" aria-label="切换到夜间模式" title="切换到夜间模式"></button>
       <button class="icon-button pet-toggle" id="pet-toggle" aria-label="显示或收起布拉吉奥" title="显示或收起布拉吉奥"><img src="./assets/brachio.png" alt="" width="15" height="28"></button>
     </div>
   </header>
+  <aside class="mobile-menu" id="mobile-menu" aria-label="更多栏目" hidden><h2>到处逛逛</h2><button class="icon-button mobile-menu-close" id="mobile-menu-close" aria-label="关闭更多栏目">×</button><div class="mobile-menu-links" id="mobile-menu-links"></div></aside>
   <main id="main" class="wrap" tabindex="-1"><div class="loading-state">正在翻开手记<span>…</span></div></main>
   <footer class="site-footer wrap">
     <div><span class="footer-motto">慢慢记录，好好生活。</span><span>© <span id="year">2026</span> <span data-site-name>慢慢来</span></span></div>

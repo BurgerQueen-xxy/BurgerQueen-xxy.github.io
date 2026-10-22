@@ -5,3 +5,14 @@ Thumbs.db
 *.log
 .openai/*
 !.openai/hosting.json
+__pycache__/
+*.pyc
+.pytest_cache/
+.venv/
+cms-dist/
+releases/
+*.sqlite*
+*.db
+.env
+service.env
+deploy/br-t320/config.local.json

@@ -63,7 +63,7 @@ if (argumentsList.includes('--watch')) {
   watcher = watch(root, { recursive: true }, (_event, filename) => {
     if (!filename) return;
     const relative = filename.replaceAll('\\', '/');
-    if (!/^(content\/|public\/|index\.html$|app\.js$|styles\.css$|pet\.js$|pet\.css$)/.test(relative)) return;
+    if (!/^(content\/|public\/|index\.html$|app\.js$|styles\.css$|pet\.js$|pet\.css$|theme\.js$|content-client\.mjs$|scripts\/markdown\.mjs$)/.test(relative)) return;
     clearTimeout(timer);
     timer = setTimeout(rebuild, 160);
   });

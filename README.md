@@ -105,7 +105,42 @@ readingTime: 3 分钟
 
 页面和样式分别是项目根目录的 `index.html`、`app.js`、`styles.css`。`public/` 内的文件会原样复制到 `dist/` 根目录，不要在引用地址里添加 `public/`。
 
-阅读收藏保存在当前浏览器的 `localStorage` 中，刷新后仍会保留。它不会同步到其他设备；清除网站数据或换浏览器后需要重新收藏。博客没有登录、云数据库或提交到服务器的表单。
+阅读收藏保存在当前浏览器的 `localStorage` 中，刷新后仍会保留。它不会同步到其他设备；清除网站数据或换浏览器后需要重新收藏。公开博客不要求登录；下面的独立文章编辑室需要管理员登录，草稿保存在路由器专属的私人目录。
+
+## BR-T320 局域网部署与文章编辑室
+
+默认部署目标为局域网 BR-T320，独立站点 ID 为 `slow-notes`。已按项目外的交接文档和参考源码适配，保留现有六个栏目。域名暂定 `slow-notes.home.arpa` 与 `slow-notes.home.arpa.admin`；端口、域名、挂载 UUID、运行账号和证书路径必须在实际路由器核对后填写。**本地适配完成不代表路由器已经部署或网络隔离已验收。**
+
+文章编辑室支持登录、写作与预览、保存草稿、历史版本、回收站、图片上传、私人相册、冻结候选、部署/下架和上一版本回滚。保存草稿不会改变博客；部署只应用明确选中的冻结版本。正文/封面上传不自动加入相册，移出相册不会删除文章引用的原图。
+
+程序仍由电脑构建。路由器使用 Python CMS 读取不可变来源快照和当前部署内容，无需 Node.js，也不读取旧博客的 Git 仓库。GitHub 发布在此 CMS 中被禁用。私人数据库、会话、媒体、配置与主站隔离；不要上传私人后台到公开仓库。
+
+运行基本检查（没有 npm 时直接运行这些 Node 命令）：
+
+```sh
+node scripts/check.mjs
+node scripts/check-runtime.mjs
+python -m pip install -r cms/requirements-dev.txt
+python -m pytest cms/tests -q
+python -m unittest discover -s deploy/br-t320 -p "test_*.py"
+```
+
+审查并提交本机改动后，在**仓库外不存在的新目录**构建正式候选包，例如 Windows：
+
+```powershell
+node scripts/build-router.mjs --output ..\slow-notes-release-001 --url https://slow-notes.home.arpa/
+```
+
+输出目录含 `program/`、`source/`、`app/`、`editor/` 和 `release.json`，旁边生成 `.tar.gz` 和 SHA-256 校验文件。每个文件均记录哈希；不覆盖上一版本。程序只读取 CMS 当前目录，不携带可能残留已下架文章的 `data/posts.json` 或静态 RSS。静态网站构建方式仍保留。
+
+工作区尚有改动时，可加 `--allow-dirty` 生成**仅本地验证包**。该包标记 `deployable:false`，路由器工具会拒绝部署。初始化管理员时密码仅通过交互输入，不放到命令行或源码中：
+
+```powershell
+python -m cms.cli init --data ..\slow-notes-local-private
+python -m cms.cli serve --data ..\slow-notes-local-private --source ..\slow-notes-release-001\source --program ..\slow-notes-release-001\program --editor ..\slow-notes-release-001\editor --port 8788
+```
+
+打开 `http://127.0.0.1:8788/admin/` 登录，点「导入本机基线文章」即可编辑已有文章。本地服务只监听 loopback。部署工具、文件布局、LuCI 登记、挂载检查、安装顺序及回滚见 [BR-T320 部署说明](deploy/br-t320/README.md)。DNS、CA 签发、SSH 授权和防火墙必须先给出实际变更范围，不能套用旧站脚本。
 
 ## UBHC 与布拉吉奥伴宠
 
@@ -115,9 +150,9 @@ readingTime: 3 分钟
 
 ## 部署到 GitHub Pages
 
-仓库已包含 `.github/workflows/pages.yml`。将**此项目目录的内容**放到 GitHub 仓库根目录，默认分支使用 `main`。在仓库 `Settings → Pages → Build and deployment` 选择 `GitHub Actions`，再推送代码，或手动运行 `Deploy blog to GitHub Pages`。
+这是另行授权后的可选静态部署方式。仓库包含 `.github/workflows/pages.yml`，已关闭推送自动部署，仅保留手动触发。当前目标是局域网，不应把含私人后台的整个项目推送到公开仓库。
 
-工作流会使用 Node.js 22 构建，上传 `dist/` 并部署。没有安装依赖的步骤。如果仓库默认分支不是 `main`，把工作流中的分支名称改成实际名称。
+如以后单独准备不含私人后台的公开仓库，工作流会使用 Node.js 22 构建，上传 `dist/` 并部署。没有安装依赖的步骤。
 
 资源和数据请求使用相对地址，页面采用 `#/...` 路由，因此可以部署在 `用户名.github.io/`，也可以部署在 `用户名.github.io/仓库名/`。部署到项目子路径时，`url` 也应包含仓库名，例如 `https://用户名.github.io/仓库名/`。
 
@@ -125,7 +160,7 @@ readingTime: 3 分钟
 
 ## RSS 与预览地址
 
-配置 `content/site.json` 中的 `url` 后，每次构建会生成 `dist/rss.xml`，包含完整正文和指向 `/#/post/文章名` 的链接。若 `url` 为空，则不生成 RSS。
+配置 `content/site.json` 中的 `url` 后，静态构建会生成 `dist/rss.xml`，包含完整正文和指向 `/#/post/文章名` 的链接。若 `url` 为空，则不生成 RSS。路由器 runtime 包暂不提供 RSS，避免继续暴露已下架的静态文章内容。
 
 目前 `url` 指向创建时的 Sites 预览地址。该地址处于所有者私有预览状态时，外部读者及 RSS 阅读器可能无法访问；正式公开部署前，请将 `url` 改成最终公开地址并重新构建。RSS 本身是静态 XML，不会收集订阅者信息。
 

@@ -9,6 +9,8 @@
     "dev": "node scripts/server.mjs --watch",
     "build": "node scripts/build.mjs",
     "preview": "node scripts/server.mjs",
-    "check": "node scripts/check.mjs"
+    "check": "node scripts/check.mjs",
+    "build:router": "node scripts/build-router.mjs",
+    "check:runtime": "node scripts/check-runtime.mjs"
   }
 }
