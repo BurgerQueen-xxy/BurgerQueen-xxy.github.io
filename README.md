@@ -70,7 +70,7 @@ readingTime: 3 分钟
 | 其他 | 崔卡拉 | TRICERA | `assets/tricera.png` |
 | 金子 | 伍迪 | WOODY | `assets/woody.png` |
 
-当前包含 8 篇生活示例，覆盖“收藏”“出去吃饭”“在家做饭”“户外”“其他”五个栏目。其中有一篇面馆外食记录和一篇番茄炒蛋的具体做饭过程；这些内容用于演示写作形式，不是已核实的餐厅推荐。文章封面使用 `assets/journal-official.jpg`、`assets/woody-official.jpg`、`assets/lucky-official.jpg` 三张官方原版素材。
+当前包含 8 篇生活示例，覆盖“收藏”“出去吃饭”“在家做饭”“户外”“其他”五个栏目。其中有一篇面馆外食记录和一篇番茄炒蛋的具体做饭过程；这些内容用于演示写作形式，不是已核实的餐厅推荐。示例封面自动适配栏目角色，真实上传的封面仍使用原照片；`sceneAsset` 用于大幅栏目插画，`asset` 保留用于导航的小角色图。
 
 “金子”记录的是真实的小黑猫，目前保留空栏目，之后再添加金子的真实文章与照片。伍迪是这个栏目的陪伴角色，角色素材不作为金子的照片。现有内容没有为金子编写虚构经历或性格设定。
 
@@ -144,15 +144,21 @@ python -m cms.cli serve --data ..\slow-notes-local-private --source ..\slow-note
 
 ## UBHC 与布拉吉奥伴宠
 
-站点 Logo 和浏览器图标使用原版 UBHC 盾徽。六个栏目入口、首页角色与文章插图均来自原版素材，没有采用前期被否定的生成图片。来源详见 `public/assets/SOURCES.md`。
+站点 Logo、护照和浏览器图标统一使用 UBHC 盾徽透明版，原始白底图也保留。透明版经过 ImageGen 去背景处理，属于网页派生文件，并非官方透明母版，详见 `public/assets/UBHC-SOURCE.md`。栏目和背景角色保留官方原画；外食用举杯迪波罗，做饭用戴厨师帽安基罗，户外使用官网史铁哥站姿。来源见 `public/assets/roles/SOURCES.md`。
 
-左下角布拉吉奥使用官方完整矢量动画，可以点击打招呼、暂停或隐藏；隐藏后可点页头右侧的布拉吉奥重新显示。偏好只保存在当前浏览器，遵循系统减少动态效果设置。伴宠模块在 `pet.js`、`pet.css`，动画与播放器来源、许可见 `public/assets/SOURCES-pet.md` 和 `public/vendor/lottie-LICENSE.txt`。
+左下角布拉吉奥使用官方完整矢量动画，眼睛跟随鼠标，可拖动、点击打招呼、暂停或隐藏，带进出场动画；隐藏后可从页头或手机「更多」重新召唤。位置归一化保存在本机，方向键也能移动，Home 归位，Esc 收起。偏好只保存在当前浏览器，遵循系统减少动态效果设置。伴宠模块在 `pet.js`、`pet.css`，动画与播放器来源、许可见 `public/assets/SOURCES-pet.md` 和 `public/vendor/lottie-LICENSE.txt`。
+
+## 天气场景与生活护照
+
+首页根据所选城市天气、当地日出日落及南北半球季节组合官方云朵、植物、角色和季节插画；雨雪、雾、落叶与环境配色由本站制作，不是官方完整气象壁纸。可在天气面板选择「跟随日夜」恢复自动模式。来源与映射见 `public/assets/scenery/SOURCES-scene.md`。
+
+护照包含封面、作者页、六栏目生活印章、随记与户外手记、封底，支持目录、按钮、左右方向键和触屏横向滑动。示例信息来自 `content/site.json`。
 
 ## 部署到 GitHub Pages
 
-这是另行授权后的可选静态部署方式。仓库包含 `.github/workflows/pages.yml`，已关闭推送自动部署，仅保留手动触发。当前目标是局域网，不应把含私人后台的整个项目推送到公开仓库。
+已按本次要求配置公开仓库 [BurgerQueen-xxy/Blog](https://github.com/BurgerQueen-xxy/Blog)。网站地址为 https://burgerqueen-xxy.github.io/Blog/ 。`.github/workflows/pages.yml` 在每次推送 `main` 时自动检查、构建和部署，也支持手动运行。
 
-如以后单独准备不含私人后台的公开仓库，工作流会使用 Node.js 22 构建，上传 `dist/` 并部署。没有安装依赖的步骤。
+Pages 工作流使用 Node.js 22，只上传静态构建产物 `dist/`。CMS 是独立的可选局域网后端，GitHub Pages 不运行它。数据库、账号密码、会话与本机配置不属于发布内容；它们已被 Git 忽略。
 
 资源和数据请求使用相对地址，页面采用 `#/...` 路由，因此可以部署在 `用户名.github.io/`，也可以部署在 `用户名.github.io/仓库名/`。部署到项目子路径时，`url` 也应包含仓库名，例如 `https://用户名.github.io/仓库名/`。
 
@@ -162,7 +168,7 @@ python -m cms.cli serve --data ..\slow-notes-local-private --source ..\slow-note
 
 配置 `content/site.json` 中的 `url` 后，静态构建会生成 `dist/rss.xml`，包含完整正文和指向 `/#/post/文章名` 的链接。若 `url` 为空，则不生成 RSS。路由器 runtime 包暂不提供 RSS，避免继续暴露已下架的静态文章内容。
 
-目前 `url` 指向创建时的 Sites 预览地址。该地址处于所有者私有预览状态时，外部读者及 RSS 阅读器可能无法访问；正式公开部署前，请将 `url` 改成最终公开地址并重新构建。RSS 本身是静态 XML，不会收集订阅者信息。
+目前 `url` 已指向 GitHub Pages 的正式项目子路径。RSS 本身是静态 XML，不会收集订阅者信息。
 
 ## 项目结构
 

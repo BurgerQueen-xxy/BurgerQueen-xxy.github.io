@@ -7,7 +7,7 @@
   "currentNote": "在读书，也在等风来",
   "location": "在自己的小小世界里",
   "sampleNotice": "本站文章、随记与收藏均为可替换的示例内容；请把它们换成你自己的故事。",
-  "url": "https://slow-notes-brachio.wintry-yew-5934.chatgpt.site",
+  "url": "https://burgerqueen-xxy.github.io/Blog/",
   "categories": [
     {
       "name": "收藏",
@@ -21,21 +21,25 @@
       "character": "迪波罗",
       "englishName": "DIPLO",
       "asset": "assets/diplo.png",
-      "description": "走出门，找到一顿让人开心的饭。"
+      "description": "走出门，找到一顿让人开心的饭。",
+      "sceneAsset": "assets/roles/diplo-beer-official.svg"
     },
     {
       "name": "在家做饭",
       "character": "安基罗",
       "englishName": "ANKYLO",
       "asset": "assets/ankylo.png",
-      "description": "在厨房里慢慢忙，把日子煮热一点。"
+      "description": "在厨房里慢慢忙，把日子煮热一点。",
+      "sceneAsset": "assets/roles/ankylo-chef-web.jpg",
+      "sceneKind": "chef"
     },
     {
       "name": "户外",
       "character": "史铁哥",
       "englishName": "STEGO",
       "asset": "assets/stego.png",
-      "description": "去散步、晒太阳，看看路上的风景。"
+      "description": "去散步、晒太阳，看看路上的风景。",
+      "sceneAsset": "assets/roles/stego-official.svg"
     },
     {
       "name": "其他",

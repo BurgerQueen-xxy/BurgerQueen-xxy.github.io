@@ -1,6 +1,8 @@
 name: Deploy blog to GitHub Pages
 
 on:
+  push:
+    branches: [main]
   workflow_dispatch:
 
 permissions:
@@ -23,8 +25,8 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22
-      - name: Build the static blog
-        run: node scripts/build.mjs
+      - name: Check and build the static blog
+        run: node scripts/check.mjs
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
         with:

@@ -1,5 +1,7 @@
+import { renderPassport, syncPassport } from './modules/passport.js';
+import { mountScene, syncScene } from './modules/scene.js';
 import { mountPet } from './pet.js';
-import { renderIsland, syncIsland, categoryArt, weatherIcon, renderStoryCards, renderPassport, syncPassport } from './modules/island.js';
+import { renderIsland, syncIsland, categoryArt, weatherIcon, renderStoryCards } from './modules/island.js';
 import { mountWidgets, syncWidgets } from './modules/widgets.js';
 import { loadContent } from './content-client.mjs';
 
@@ -130,7 +132,7 @@ function render() {
   $('#mobile-menu').hidden = true;
   document.querySelector('.mobile-more')?.setAttribute('aria-expanded','false');
   $('.site-header').classList.toggle('scrolled', currentPage !== 'home' || window.scrollY > 90);
-  if(currentPage === 'home') syncIsland();
+  if(currentPage === 'home') { syncIsland(); syncScene(); }
   if(currentPage === 'about') syncPassport();
   syncWidgets();
   document.querySelectorAll('[data-nav]').forEach(el => {
@@ -230,7 +232,7 @@ async function init() {
     categories=['全部',...(site.categories||[]).map(c=>c.name)];
     document.querySelector('meta[name="description"]').content=site.description;
     $('.brand').setAttribute('aria-label',`${site.name} 首页`);
-    $('.main-nav').innerHTML=`${(site.categories||[]).map(c=>`<a href="${categoryUrl(c.name)}" data-nav="${escape(c.name)}" title="${escape(c.character)}"><img class="nav-character" src="./${escape(c.asset)}" alt=""><span>${escape(c.name)}</span></a>`).join('')}<a href="#/about" data-nav="about"><img class="nav-passport" src="./assets/ubhc-logo.jpg" alt=""><span>护照</span></a><button class="mobile-more" aria-expanded="false" aria-controls="mobile-menu"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="5" cy="12" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="19" cy="12" r="2"/></svg><span>更多</span></button>`;
+    $('.main-nav').innerHTML=`${(site.categories||[]).map(c=>`<a href="${categoryUrl(c.name)}" data-nav="${escape(c.name)}" title="${escape(c.character)}"><img class="nav-character" src="./${escape(c.asset)}" alt=""><span>${escape(c.name)}</span></a>`).join('')}<a href="#/about" data-nav="about"><img class="nav-passport" src="./assets/ubhc-transparent.png" alt=""><span>护照</span></a><button class="mobile-more" aria-expanded="false" aria-controls="mobile-menu"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="5" cy="12" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="19" cy="12" r="2"/></svg><span>更多</span></button>`;
     $('#mobile-menu-links').innerHTML=`${site.categories.map(c=>`<a href="${categoryUrl(c.name)}"><img src="./${escape(c.asset)}" alt="">${escape(c.name)}</a>`).join('')}<a href="#/journal">全部手记</a><a href="#/about">生活护照</a><a href="#/little-things?tab=saved">阅读书签</a><button id="mobile-pet-toggle">布拉吉奥小伙伴</button>`;
     $('#mobile-pet-toggle').addEventListener('click',()=>{$('#pet-toggle').click();});
     document.querySelector('.mobile-more').addEventListener('click',()=>{const open=$('#mobile-menu').hidden;$('#mobile-menu').hidden=!open;document.querySelector('.mobile-more').setAttribute('aria-expanded',String(open));});
@@ -238,6 +240,7 @@ async function init() {
     document.querySelectorAll('[data-english-name]').forEach(el=>el.textContent=site.englishName);
     $('#year').textContent=String(new Date().getFullYear());
     mountWidgets({site,posts});
+    mountScene();
     render();
   } catch(error) {
     $('#main').innerHTML='<div class="empty-state page-empty"><h1>手记还没翻开。</h1><p>暂时没能读取内容，请刷新页面再试一次。</p><button class="button primary" id="retry">重新打开</button></div>';

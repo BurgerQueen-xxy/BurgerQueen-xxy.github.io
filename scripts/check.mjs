@@ -1,10 +1,11 @@
 import { spawnSync } from 'node:child_process';
 import assert from 'node:assert/strict';
 import path from 'node:path';
+import { access } from 'node:fs/promises';
 import { root, build, validatePostContent } from './build.mjs';
 import { renderMarkdown } from './markdown.mjs';
 
-for (const filename of ['app.js', 'theme.js', 'pet.js', 'content-client.mjs', 'scripts/markdown.mjs', 'scripts/build.mjs', 'scripts/build-router.mjs', 'scripts/server.mjs', 'scripts/check.mjs', 'scripts/check-runtime.mjs']) {
+for (const filename of ['public/modules/island.js', 'public/modules/widgets.js', 'public/modules/passport.js', 'public/modules/scene.js', 'app.js', 'theme.js', 'pet.js', 'content-client.mjs', 'scripts/markdown.mjs', 'scripts/build.mjs', 'scripts/build-router.mjs', 'scripts/server.mjs', 'scripts/check.mjs', 'scripts/check-runtime.mjs']) {
   const result = spawnSync(process.execPath, ['--check', path.join(root, filename)], { stdio: 'inherit' });
   if (result.status !== 0) process.exit(result.status || 1);
 }
@@ -22,6 +23,9 @@ for (const source of ['javascript:alert', 'data:image/svg+xml,test', 'http://exa
   assert(!rendered.includes('<img') && !rendered.includes('<a '), `不允许的图片来源不应显示为图片或链接：${source}`);
 }
 const { posts, site } = await build();
+for (const asset of ['assets/ubhc-transparent.png', ...site.categories.flatMap(c=>[c.asset,c.sceneAsset].filter(Boolean))]) {
+  await access(path.join(root, 'public', asset));
+}
 await assert.rejects(validatePostContent([{ ...posts[0], category: '未配置的栏目' }], site), /未在.*categories.*配置/, '未配置的文章分类应阻止构建');
 await assert.rejects(validatePostContent([{ ...posts[0], cover: 'assets/__missing-cover-check__.jpg' }], site), /封面文件不存在/, '缺失封面应阻止构建');
 await assert.rejects(validatePostContent(posts, { ...site, categories: [{ name: '重复栏目' }, { name: '重复栏目' }] }), /唯一/, '重复栏目名称应阻止构建');
