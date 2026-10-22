@@ -1,4 +1,6 @@
 // Browser-only companions. Weather dates and the calendar use Asia/Shanghai.
+import { resolveWeatherEffect } from './scene.js';
+
 const TZ = 'Asia/Shanghai';
 const $ = (selector, root = document) => root.querySelector(selector);
 const esc = value => String(value ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -17,6 +19,18 @@ if (!validCity(city)) city = defaultCity;
 let weather = null, weatherLoading = false, weatherError = '', weatherController = null, citySearchController = null;
 let selectedDate = '', calendarMonth = '', cachedAt = 0;
 let sessionTheme = null, sessionAutoTheme = false;
+const WEATHER_EFFECT_KEY = 'slow-notes-weather-effect';
+const weatherEffectOptions = [
+  {value:'auto',label:'跟随真实天气',icon:'cloud'},
+  {value:'clear',label:'晴天',icon:'sun'},
+  {value:'cloud',label:'多云',icon:'cloud'},
+  {value:'rain',label:'下雨',icon:'rain'},
+  {value:'snow',label:'下雪',icon:'snow'},
+  {value:'fog',label:'雾',icon:'fog'},
+  {value:'storm',label:'雷雨',icon:'storm'},
+];
+let weatherEffect = resolveWeatherEffect('unknown',read(WEATHER_EFFECT_KEY,'auto')).weatherEffect;
+let lastWeatherEffectSignature = '';
 const cityKey = value => `${value.latitude.toFixed(4)},${value.longitude.toFixed(4)}`;
 
 export function clockParts(date = new Date()) {
@@ -76,6 +90,49 @@ function weatherDescription(code) {
   if ((code >= 71 && code <= 77) || code === 85 || code === 86) return {label:'雪',kind:'snow',icon:'snow'};
   return {label:code >= 80 ? '阵雨' : '雨',kind:'rain',icon:'rain'};
 }
+function weatherEffectControls() {
+  return `<section class="sn-weather-effects" aria-labelledby="sn-weather-effects-title"><div class="sn-section-label"><b id="sn-weather-effects-title">首页天气效果</b><small>随心预览</small></div><div class="sn-weather-effect-options" role="group" aria-label="选择首页天气效果">${weatherEffectOptions.map(option=>`<button type="button" data-weather-effect-choice="${option.value}" aria-pressed="${option.value===weatherEffect}" aria-label="${option.value==='auto'?'跟随真实天气显示首页效果':`预览${option.label}天气效果`}">${icon(option.icon,17)}<span>${option.label}</span></button>`).join('')}</div><p id="sn-weather-effect-status" class="sn-weather-effect-status" role="status" aria-live="polite" aria-atomic="true"></p><p class="sn-footnote">仅改变首页画面，实况和预报照常显示。</p></section>`;
+}
+function syncWeatherEffect() {
+  const description=weatherDescription(weather?.current?.weather_code);
+  const state=resolveWeatherEffect(description.kind,weatherEffect);
+  const root=document.documentElement;
+  if(root.dataset.weatherEffect!==state.weatherEffect) root.dataset.weatherEffect=state.weatherEffect;
+  if(root.dataset.weatherEffectMode!==state.weatherMode) root.dataset.weatherEffectMode=state.weatherMode;
+  document.querySelectorAll('[data-weather-effect-choice]').forEach(button=>button.setAttribute('aria-pressed',String(button.dataset.weatherEffectChoice===state.weatherEffect)));
+  const status=$('#sn-weather-effect-status');
+  if(status) {
+    const label=weatherEffectOptions.find(option=>option.value===state.weatherEffect).label;
+    const actual=description.kind==='unknown' ? (weatherLoading?'正在获取实况':'暂无实况数据') : `${description.label}${weatherError?'（上次获取）':''}`;
+    const message=state.weatherMode==='preview' ? `正在预览${label} · ${description.kind==='unknown'?actual:`实况仍是${actual}`}` : `跟随真实天气 · ${description.kind==='unknown'?actual:`当前${actual}`}`;
+    if(status.textContent!==message) status.textContent=message;
+  }
+  const heroWeather=$('.island-weather');
+  if(heroWeather) {
+    let hint=heroWeather.querySelector('.sn-hero-weather-effect');
+    if(!hint) {
+      hint=document.createElement('span');hint.className='sn-hero-weather-effect';hint.id='sn-hero-weather-effect';
+      hint.setAttribute('role','status');hint.setAttribute('aria-live','polite');hint.setAttribute('aria-atomic','true');
+      heroWeather.append(hint);heroWeather.classList.add('sn-has-weather-effect');
+      const descriptions=new Set((heroWeather.getAttribute('aria-describedby')||'').split(/\s+/).filter(Boolean));
+      descriptions.add(hint.id);heroWeather.setAttribute('aria-describedby',[...descriptions].join(' '));
+    }
+    const effectLabel=weatherEffectOptions.find(option=>option.value===state.weatherEffect).label;
+    const actualLabel=description.kind==='unknown' ? '暂无实况' : `实况${description.label}${weatherError?'（缓存）':''}`;
+    const message=state.weatherMode==='preview' ? `视觉：${effectLabel} · ${actualLabel}` : `视觉跟随实况 · ${description.kind==='unknown'?'等待天气':description.label}`;
+    if(hint.textContent!==message) hint.textContent=message;
+  }
+  const signature=[state.weatherEffect,state.actualCondition].join('|');
+  if(signature!==lastWeatherEffectSignature) {
+    lastWeatherEffectSignature=signature;
+    document.dispatchEvent(new CustomEvent('slow-weather-effect-change',{detail:state}));
+  }
+}
+function selectWeatherEffect(value) {
+  weatherEffect=resolveWeatherEffect('unknown',value).weatherEffect;
+  save(WEATHER_EFFECT_KEY,weatherEffect);
+  syncWeatherEffect();
+}
 function syncWeather() {
   const description = weatherDescription(weather?.current?.weather_code);
   document.querySelectorAll('[data-weather-city]').forEach(el => { el.textContent = city.name; });
@@ -83,6 +140,7 @@ function syncWeather() {
   document.querySelectorAll('[data-weather-label]').forEach(el => { el.textContent = weather ? `${description.label}${weatherError ? ' · 缓存' : ''}` : weatherLoading ? '获取中' : '天气暂无'; });
   document.querySelectorAll('[data-weather-icon]').forEach(el => { el.innerHTML = icon(description.icon); });
   document.documentElement.dataset.weatherCondition = description.kind;
+  syncWeatherEffect();
   const toggle = $('#weather-toggle');
   if (toggle) toggle.setAttribute('aria-label', `${city.name} ${weather ? `${temp(weather.current.temperature_2m)} ${description.label}` : '天气暂无'}，打开天气与时间`);
 }
@@ -334,7 +392,7 @@ export function mountWidgets({site={},posts=[]}={}) {
   articlePosts=posts;siteName=site.name||siteName;
   if(mounted) { syncWidgets(); return; }
   mounted=true;
-  document.body.insertAdjacentHTML('beforeend',panelShell('sn-weather','WEATHER & TIME','小小气象站',`<div class="sn-live-clock"><span data-clock-full></span><small>北京时间</small></div><div class="sn-theme-follow"><span id="sn-theme-mode"></span><button type="button" class="sn-text-button" data-follow-day-night aria-pressed="false" title="北京时间 19:00 至次日 05:00 使用夜间模式">跟随日夜</button></div><div id="sn-weather-readings"></div><details class="sn-city-settings"><summary>更换城市</summary><form id="sn-city-form"><label class="sn-sr-only" for="sn-city-input">城市名称</label><input id="sn-city-input" autocomplete="off" placeholder="输入城市，如杭州 / Hangzhou" maxlength="80" required minlength="2"><button type="submit">查找</button></form><div id="sn-city-results" class="sn-city-results" aria-live="polite"></div><p class="sn-footnote">默认参考杭州。城市选择只保存在这台设备上。</p></details><div class="sn-widget-bottom"><button type="button" class="sn-soft-button" data-open-calendar>${icon('calendar',17)} 翻开日历</button><a href="https://open-meteo.com/" target="_blank" rel="noopener noreferrer">Open-Meteo ↗</a></div>`,'brachio'));
+  document.body.insertAdjacentHTML('beforeend',panelShell('sn-weather','WEATHER & TIME','小小气象站',`<div class="sn-live-clock"><span data-clock-full></span><small>北京时间</small></div><div class="sn-theme-follow"><span id="sn-theme-mode"></span><button type="button" class="sn-text-button" data-follow-day-night aria-pressed="false" title="北京时间 19:00 至次日 05:00 使用夜间模式">跟随日夜</button></div>${weatherEffectControls()}<div id="sn-weather-readings"></div><details class="sn-city-settings"><summary>更换城市</summary><form id="sn-city-form"><label class="sn-sr-only" for="sn-city-input">城市名称</label><input id="sn-city-input" autocomplete="off" placeholder="输入城市，如杭州 / Hangzhou" maxlength="80" required minlength="2"><button type="submit">查找</button></form><div id="sn-city-results" class="sn-city-results" aria-live="polite"></div><p class="sn-footnote">默认参考杭州。城市选择只保存在这台设备上。</p></details><div class="sn-widget-bottom"><button type="button" class="sn-soft-button" data-open-calendar>${icon('calendar',17)} 翻开日历</button><a href="https://open-meteo.com/" target="_blank" rel="noopener noreferrer">Open-Meteo ↗</a></div>`,'brachio'));
   document.body.insertAdjacentHTML('beforeend',panelShell('sn-calendar','LITTLE DAYS','日历',`<nav class="sn-calendar-nav" aria-label="日历月份"><button type="button" class="sn-round-button" data-calendar-month="-1" aria-label="上个月">${icon('left',18)}</button><button type="button" class="sn-soft-button" data-calendar-today>回到今天</button><button type="button" class="sn-round-button" data-calendar-month="1" aria-label="下个月">${icon('right',18)}</button></nav><div class="sn-calendar-week" aria-hidden="true">${'一二三四五六日'.split('').map(day=>`<span>${day}</span>`).join('')}</div><div id="sn-calendar-grid" class="sn-calendar-grid" aria-label="选择日期"></div><p class="sn-calendar-legend"><i></i> 有手记的日子 <span>· 北京时间</span></p><div id="sn-calendar-detail" class="sn-calendar-detail" aria-live="polite"></div><div class="sn-section-label"><b id="sn-calendar-city"></b><button type="button" class="sn-text-button" data-open-weather>查看天气</button></div><div id="sn-calendar-forecast"></div><p class="sn-footnote">预报来自 <a href="https://open-meteo.com/" target="_blank" rel="noopener noreferrer">Open-Meteo</a> · 农历由浏览器日期服务提供</p>`));
   document.body.insertAdjacentHTML('beforeend',panelShell('sn-music','SLOW RADIO','慢慢听',`<div class="sn-music-now"><div class="sn-record"><img id="sn-music-cover" src="./assets/brachio.png" alt="" width="64" height="64"></div><div><h3 id="sn-music-track-title"></h3><p id="sn-music-artist"></p></div></div><input id="sn-music-progress" class="sn-range" type="range" min="0" max="1" value="0" step="0.1" disabled aria-label="音乐播放进度"><div class="sn-music-time"><span id="sn-music-elapsed">0:00</span><span id="sn-music-duration">0:00</span></div><div class="sn-music-controls"><button id="sn-music-mode" type="button" class="sn-mode"></button><div class="sn-play-controls"><button id="sn-music-prev" type="button" aria-label="上一首">${icon('prev',19)}</button><button id="sn-music-play" type="button" aria-label="播放音乐">${icon('play',23)}</button><button id="sn-music-next" type="button" aria-label="下一首">${icon('next',19)}</button></div><button id="sn-music-list-toggle" type="button" class="sn-round-button" aria-label="展开或收起播放列表" aria-controls="sn-music-list" aria-expanded="true">${icon('list',20)}</button></div><label class="sn-volume">${icon('volume',18)}<input id="sn-music-volume" class="sn-range" type="range" min="0" max="1" step="0.01" aria-label="音量"><output id="sn-volume-value"></output></label><p id="sn-music-status" class="sn-music-status" role="status"></p><div id="sn-music-list"><ol id="sn-playlist" class="sn-playlist"></ol><label class="sn-import">＋ 加入本地音乐<input id="sn-music-import" type="file" accept="audio/*,.mp3,.wav,.ogg,.m4a,.flac,.opus" multiple></label><p class="sn-footnote">自带两段原创合成旋律。导入的音乐留在本机，刷新后清空。</p></div>`));
   audio=document.createElement('audio');audio.id='sn-audio';audio.preload='metadata';audio.hidden=true;document.body.append(audio);
@@ -359,7 +417,8 @@ export function mountWidgets({site={},posts=[]}={}) {
     dialog.addEventListener('click',event=>{if(event.target===dialog){const rect=dialog.getBoundingClientRect();if(event.clientX<rect.left||event.clientX>rect.right||event.clientY<rect.top||event.clientY>rect.bottom) dialog.close();}});
   }
   document.addEventListener('click',event=>{
-    const target=event.target.closest('button,a');if(!target) return;
+    // A button handler may replace its SVG before this event reaches document.
+    const target=event.composedPath().find(node=>node?.matches?.('button,a'));if(!target) return;
     if(target.closest('.sn-calendar-articles')) $('#sn-calendar').close();
     if(target.matches('#weather-toggle,[data-open-weather]')) {renderWeather();showDialog('sn-weather',target);}
     if(target.matches('#music-toggle')) {renderTracks();showDialog('sn-music',target);}
@@ -367,6 +426,7 @@ export function mountWidgets({site={},posts=[]}={}) {
     if(target.matches('[data-widget-close]')) target.closest('dialog').close();
     if(target.matches('#theme-toggle')) {sessionAutoTheme=false;sessionTheme=document.documentElement.dataset.theme;syncClock();}
     if(target.matches('[data-follow-day-night]')) {sessionTheme=null;sessionAutoTheme=true;try {localStorage.removeItem('slow-notes-theme');} catch { /* Follow the clock for this page when preferences cannot be saved. */ }syncClock();}
+    if(target.matches('[data-weather-effect-choice]')) selectWeatherEffect(target.dataset.weatherEffectChoice);
     if(target.matches('[data-refresh-weather]')) fetchWeather();
     if(target.matches('[data-forecast-date]')) openCalendar(target,target.dataset.forecastDate);
     if(target.matches('[data-calendar-month]')) {calendarMonth=shiftCalendarMonth(calendarMonth,Number(target.dataset.calendarMonth));renderCalendar();}
@@ -375,7 +435,10 @@ export function mountWidgets({site={},posts=[]}={}) {
     if(target.matches('[data-track-index]')) selectTrack(Number(target.dataset.trackIndex),true);
   });
   window.addEventListener('hashchange',()=>document.querySelectorAll('.sn-widget[open]').forEach(dialog=>dialog.close()));
-  window.addEventListener('storage',event=>{if(event.key==='slow-notes-theme' || event.key===null){sessionTheme=null;sessionAutoTheme=false;syncClock();}});
+  window.addEventListener('storage',event=>{
+    if(event.key==='slow-notes-theme' || event.key===null){sessionTheme=null;sessionAutoTheme=false;syncClock();}
+    if(event.key===WEATHER_EFFECT_KEY || event.key===null){weatherEffect=resolveWeatherEffect('unknown',read(WEATHER_EFFECT_KEY,'auto')).weatherEffect;syncWeatherEffect();}
+  });
   document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible'){syncClock();if(Date.now()-cachedAt>30*60*1000 && !weatherLoading) fetchWeather();}});
   window.addEventListener('pagehide',event=>{if(!event.persisted){clearInterval(clockTimer);clearInterval(refreshTimer);weatherController?.abort();citySearchController?.abort();importedURLs.forEach(url=>URL.revokeObjectURL(url));}});
   const cache=read('slow-notes-weather-cache',null);

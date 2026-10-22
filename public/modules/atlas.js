@@ -1,7 +1,7 @@
 // Geography: Natural Earth 5.1.2 (public domain). See assets/maps/SOURCES.md.
 // No travel history is bundled with the geographic data.
 const SVG_NS='http://www.w3.org/2000/svg';
-const BASE_VIEW={x:48,y:168,width:1440,height:744};
+const BASE_VIEW={x:0,y:0,width:1536,height:1024};
 const MAX_ZOOM=8;
 const mounted=new WeakMap();
 let dataPromise;
@@ -55,7 +55,7 @@ function svgElement(name,attributes={},text) {
 
 export function renderAtlas(site={},posts=[]) {
   const journeys=normalizeJourneys(site.journeys);
-  return `<section class="jp-atlas atlas-root" aria-label="护照世界地图"><header class="atlas-heading"><div><p>THE WORLD IN MY PASSPORT</p><h2>世界很大，慢慢走。</h2></div><span class="atlas-record-count">${journeys.length} 条地点记录</span></header><div class="atlas-toolbar"><label class="atlas-select-label"><span>国家 / 地区</span><select class="atlas-country-select" aria-label="选择国家或地区" disabled><option value="">正在展开地图…</option></select></label><div class="atlas-controls" aria-label="地图缩放"><button type="button" data-atlas-action="out" aria-label="缩小地图" title="缩小" disabled>−</button><output class="atlas-zoom" aria-live="polite">1×</output><button type="button" data-atlas-action="in" aria-label="放大地图" title="放大" disabled>＋</button><button type="button" data-atlas-action="reset" aria-label="复位世界地图" title="复位" disabled>↺</button></div></div><div class="atlas-viewport" tabindex="0" aria-label="世界地图，选择国家后可放大；方向键平移，加减键缩放，Home 复位"><div class="atlas-map-status" role="status">地图正在展开…</div><svg class="atlas-map" xmlns="${SVG_NS}" viewBox="${BASE_VIEW.x} ${BASE_VIEW.y} ${BASE_VIEW.width} ${BASE_VIEW.height}" role="img" aria-label="世界国家轮廓与经纬线" preserveAspectRatio="xMidYMid meet"></svg><div class="atlas-compass" aria-hidden="true"><span>N</span><i></i><small>W　E</small><b>S</b></div><span class="atlas-map-hint">拖动地图 · 选择国家</span></div><section class="atlas-detail" aria-live="polite" aria-atomic="false"><div class="atlas-empty"><h3>${journeys.length?'地点记录正在展开':'世界很大，足迹慢慢留下'}</h3><p>先看看地图，下一次出发再慢慢记录。</p></div></section><footer class="atlas-source"><span>Natural Earth · 国家与地区轮廓</span><a href="https://www.naturalearthdata.com/" target="_blank" rel="noopener noreferrer">地图来源 ↗</a></footer></section>`;
+  return `<section class="jp-atlas atlas-root" aria-label="护照世界地图"><header class="atlas-heading"><div><p>THE WORLD IN MY PASSPORT</p><h2>世界很大，慢慢走。</h2></div><span class="atlas-record-count">${journeys.length} 条地点记录</span></header><div class="atlas-toolbar"><label class="atlas-select-label"><span>国家 / 地区</span><select class="atlas-country-select" aria-label="选择国家或地区" disabled><option value="">正在展开地图…</option></select></label><div class="atlas-controls" aria-label="地图缩放"><button type="button" data-atlas-action="out" aria-label="缩小地图" title="缩小" disabled>−</button><output class="atlas-zoom" aria-live="polite">1×</output><button type="button" data-atlas-action="in" aria-label="放大地图" title="放大" disabled>＋</button><button type="button" data-atlas-action="reset" aria-label="复位世界地图" title="复位" disabled>↺</button></div></div><div class="atlas-viewport" tabindex="0" aria-label="世界地图，选择国家后可放大；方向键平移，加减键缩放，Home 复位"><div class="atlas-map-status" role="status">地图正在展开…</div><svg class="atlas-map" xmlns="${SVG_NS}" viewBox="${BASE_VIEW.x} ${BASE_VIEW.y} ${BASE_VIEW.width} ${BASE_VIEW.height}" role="img" aria-label="世界国家轮廓与经纬线" preserveAspectRatio="xMidYMid meet"></svg><span class="atlas-map-hint">拖动地图 · 选择国家</span></div><section class="atlas-detail" aria-live="polite" aria-atomic="false"><div class="atlas-empty"><h3>${journeys.length?'地点记录正在展开':'世界很大，足迹慢慢留下'}</h3><p>先看看地图，下一次出发再慢慢记录。</p></div></section><footer class="atlas-source"><span>Natural Earth · 国家与地区轮廓</span><a href="https://www.naturalearthdata.com/" target="_blank" rel="noopener noreferrer">地图来源 ↗</a></footer></section>`;
 }
 
 function loadMap() {
@@ -117,8 +117,10 @@ export function mountAtlas(container,site={},posts=[]) {
   }
   function renderDetail() {
     const country=currentCountry(),list=country?knownRecords.filter(record=>record.code===country.code):knownRecords;
+    root.dataset.atlasSelected=String(Boolean(country));
+    detail.hidden=!country;
     if(!country&&!list.length){detail.innerHTML='<div class="atlas-empty"><h3>世界很大，足迹慢慢留下</h3><p>这里还没有旅行记录。选一个国家，先在地图上逛逛。</p></div>';return;}
-    detail.innerHTML=`<div class="atlas-detail-heading"><h3>${country?esc(country.name):'口袋里的旅行记录'}</h3><span>${list.length} 条记录</span></div>${list.length?`<div class="atlas-records">${list.map(recordHTML).join('')}</div>`:`<p class="atlas-country-empty">还没有这里的足迹，留给下一次出发。</p>`}`;
+    detail.innerHTML=`<div class="atlas-detail-heading"><h3>${country?esc(country.name):'口袋里的旅行记录'}</h3><span>${list.length} 条记录</span><button type="button" data-atlas-action="close" aria-label="收起国家详情">×</button></div>${list.length?`<div class="atlas-records">${list.map(recordHTML).join('')}</div>`:`<p class="atlas-country-empty">还没有这里的足迹，留给下一次出发。</p>`}`;
   }
   function chooseCountry(code,center=false) {
     selected=byCode.has(code)?code:'';select.value=selected;
@@ -175,7 +177,7 @@ export function mountAtlas(container,site={},posts=[]) {
   listen(root,'click',event=>{
     const retry=event.target.closest('[data-atlas-retry]');if(retry){start();return;}
     const action=event.target.closest('[data-atlas-action]')?.dataset.atlasAction;if(!data||!action)return;
-    if(action==='in')zoomBy(1.5);if(action==='out')zoomBy(1/1.5);if(action==='reset'){setView({...BASE_VIEW});chooseCountry('');}
+    if(action==='close'){chooseCountry('');select.focus();}if(action==='in')zoomBy(1.5);if(action==='out')zoomBy(1/1.5);if(action==='reset'){setView({...BASE_VIEW});chooseCountry('');}
   });
   listen(viewport,'keydown',event=>{
     if(event.target!==viewport||!data)return;

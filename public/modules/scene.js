@@ -8,6 +8,7 @@ const SEASONS = ['winter','spring','summer','autumn'];
 const SEASON_NAMES = {spring:'春天',summer:'夏天',autumn:'秋天',winter:'冬天'};
 const PHASE_NAMES = {morning:'清晨',day:'白天',evening:'傍晚',night:'夜晚'};
 const WEATHER_NAMES = {clear:'晴',cloud:'多云',rain:'雨',snow:'雪',fog:'雾',storm:'雷雨',unknown:'天气暂无'};
+const WEATHER_EFFECTS = new Set(['auto','clear','cloud','rain','snow','fog','storm']);
 const ART = {
   spring:{src:'./assets/hero-v3/summer-hanok-web.jpg',mobile:'./assets/hero-v3/summer-hanok-mobile.jpg',key:'hanok',source:'Hanok Wallpaper'},
   summer:{src:'./assets/hero-v3/summer-hanok-web.jpg',mobile:'./assets/hero-v3/summer-hanok-mobile.jpg',key:'hanok',source:'Hanok Wallpaper'},
@@ -70,8 +71,16 @@ export function daylightPhase(date, city = DEFAULT_CITY, weather = null) {
   return {phase:solarPhase(date,city.latitude,city.longitude),source:'solar-estimate'};
 }
 
+/** A visual preview never changes the observed weather condition. */
+export function resolveWeatherEffect(condition = 'unknown', effect = 'auto') {
+  const actualCondition=CONDITIONS.has(condition) ? condition : 'unknown';
+  const weatherEffect=WEATHER_EFFECTS.has(effect) ? effect : 'auto';
+  const weatherMode=weatherEffect==='auto' ? 'auto' : 'preview';
+  return {actualCondition,weatherEffect,weatherMode,condition:weatherMode==='auto'?actualCondition:weatherEffect};
+}
+
 /** Pure state selection is exported for deterministic date/weather verification. */
-export function deriveSceneState({date=new Date(),city=DEFAULT_CITY,weather=null,condition='unknown',theme=null,themeMode='auto',timeOfDay=null} = {}) {
+export function deriveSceneState({date=new Date(),city=DEFAULT_CITY,weather=null,condition='unknown',weatherEffect='auto',theme=null,themeMode='auto',timeOfDay=null} = {}) {
   if(!(date instanceof Date) || !finite(date.getTime())) throw new TypeError('场景时间必须是有效日期');
   if(!validCity(city)) city=DEFAULT_CITY;
   const season=seasonAt(date,city.latitude,city.timezone || TZ);
@@ -82,9 +91,9 @@ export function deriveSceneState({date=new Date(),city=DEFAULT_CITY,weather=null
     phase=theme==='dark' ? 'night' : PHASES.has(timeOfDay)&&timeOfDay!=='night' ? timeOfDay : 'day';
     phaseSource='manual-theme';
   }
-  const kind=CONDITIONS.has(condition) ? condition : 'unknown';
+  const effect=resolveWeatherEffect(condition,weatherEffect), kind=effect.condition;
   const art=phase==='night' && season!=='winter' ? {...ART[season],mobile:ART.night.mobile,mobileSource:ART.night.source} : ART[season];
-  return {season,phase,condition:kind,city:typeof city.name==='string'?city.name:'所选城市',latitude:city.latitude,phaseSource,art,
+  return {season,phase,...effect,city:typeof city.name==='string'?city.name:'所选城市',latitude:city.latitude,phaseSource,art,
     label:`${SEASON_NAMES[season]} · ${PHASE_NAMES[phase]} · ${WEATHER_NAMES[kind]}`};
 }
 
@@ -94,7 +103,7 @@ function particles(kind,count) {
 function ensureLayers(hero) {
   if(hero.querySelector('.scene-effects')) return;
   const effects=document.createElement('div');effects.className='scene-effects';effects.setAttribute('aria-hidden','true');
-  effects.innerHTML=`<div class="scene-haze"></div><div class="scene-rain">${particles('drop',24)}</div><div class="scene-snow">${particles('flake',22)}</div><div class="scene-season-particles">${particles('leaf',9)}</div><div class="scene-puddles"></div>`;
+  effects.innerHTML=`<div class="scene-clouds"></div><div class="scene-sunlight"></div><div class="scene-haze"></div><div class="scene-rain">${particles('drop',24)}</div><div class="scene-snow">${particles('flake',22)}</div><div class="scene-season-particles">${particles('leaf',9)}</div><div class="scene-puddles"></div><div class="scene-lightning"></div>`;
   hero.append(effects);
   const status=document.createElement('p');status.className='scene-description';status.id='scene-description';hero.append(status);
   const described=new Set((hero.getAttribute('aria-describedby')||'').split(/\s+/).filter(Boolean));described.add(status.id);hero.setAttribute('aria-describedby',[...described].join(' '));
@@ -107,7 +116,7 @@ function currentContext() {
   const city=validCity(storedCity)?storedCity:DEFAULT_CITY;
   const cache=read('slow-notes-weather-cache',null);
   const weather=cache?.key===cityKey(city) && finite(cache.at) && Date.now()-cache.at<24*3600000 ? cache.data : null;
-  return {city,weather,condition:root.dataset.weatherCondition,theme:root.dataset.theme,themeMode:root.dataset.themeMode,timeOfDay:root.dataset.timeOfDay};
+  return {city,weather,condition:root.dataset.weatherCondition,weatherEffect:root.dataset.weatherEffect ?? read('slow-notes-weather-effect','auto'),theme:root.dataset.theme,themeMode:root.dataset.themeMode,timeOfDay:root.dataset.timeOfDay};
 }
 
 /** Call after rendering the homepage. Safe to call repeatedly on every route. */
@@ -116,16 +125,18 @@ export function syncScene() {
   const state=deriveSceneState(currentContext());
   const root=document.documentElement;
   root.dataset.sceneSeason=state.season;root.dataset.scenePhase=state.phase;root.dataset.sceneWeather=state.condition;
+  root.dataset.sceneActualWeather=state.actualCondition;root.dataset.sceneWeatherMode=state.weatherMode;
   const hero=document.querySelector('.island-hero');
   if(!hero) return state;
   ensureLayers(hero);
-  const signature=[state.season,state.phase,state.condition,state.city,state.phaseSource].join('|');
+  const signature=[state.season,state.phase,state.condition,state.actualCondition,state.weatherMode,state.city,state.phaseSource].join('|');
   if(lastSignature===signature && hero.dataset.sceneSignature===signature) return state;
   lastSignature=signature;hero.dataset.sceneSignature=signature;
   hero.dataset.sceneSeason=state.season;hero.dataset.scenePhase=state.phase;hero.dataset.sceneWeather=state.condition;
+  hero.dataset.sceneActualWeather=state.actualCondition;hero.dataset.sceneWeatherMode=state.weatherMode;
   hero.dataset.sceneSource=state.phaseSource;
   const description=hero.querySelector('.scene-description');
-  description.textContent=`${state.city}，${state.label}。${state.phaseSource==='manual-theme'?'日夜外观使用手动选择。':'日夜随所在地日照变化。'}背景使用 JOGUMAN 官方完整插画，雨雪与雾的动态效果由本站制作。`;
+  description.textContent=`${state.city}，${state.label}。${state.weatherMode==='preview'?`天气效果为手动预览，实况为${WEATHER_NAMES[state.actualCondition]}。`:'天气效果跟随实况。'}${state.phaseSource==='manual-theme'?'日夜外观使用手动选择。':'日夜随所在地日照变化。'}背景使用 JOGUMAN 官方完整插画，雨雪与雾的动态效果由本站制作。`;
   hero.dataset.sceneArt=state.art.key;
   root.dataset.sceneArt=state.art.key;
   const picture=hero.querySelector('.hero-official');
@@ -143,9 +154,10 @@ export function mountScene() {
   if(mounted) return syncScene();
   mounted=true;
   observer=new MutationObserver(()=>syncScene());
-  observer.observe(document.documentElement,{attributes:true,attributeFilter:['data-time-of-day','data-weather-condition','data-theme','data-theme-mode']});
+  observer.observe(document.documentElement,{attributes:true,attributeFilter:['data-time-of-day','data-weather-condition','data-weather-effect','data-theme','data-theme-mode']});
+  document.addEventListener('slow-weather-effect-change',()=>syncScene());
   window.addEventListener('hashchange',()=>requestAnimationFrame(()=>syncScene()));
-  window.addEventListener('storage',event=>{if(!event.key || ['slow-notes-weather-city','slow-notes-weather-cache','slow-notes-theme'].includes(event.key)) syncScene();});
+  window.addEventListener('storage',event=>{if(!event.key || ['slow-notes-weather-city','slow-notes-weather-cache','slow-notes-weather-effect','slow-notes-theme'].includes(event.key)) syncScene();});
   document.addEventListener('visibilitychange',()=>{document.documentElement.dataset.scenePaused=String(document.hidden);if(!document.hidden) syncScene();});
   timer=setInterval(()=>{if(!document.hidden) syncScene();},60000);
   window.addEventListener('pagehide',event=>{if(!event.persisted){observer?.disconnect();clearInterval(timer);}});

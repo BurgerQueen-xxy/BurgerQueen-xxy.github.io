@@ -1,12 +1,12 @@
-// Official JOGUMAN artwork; see public/assets/SOURCES-pet.md for provenance.
+// Official standing JOGUMAN artwork; see public/assets/pet-v4/SOURCES.md.
 const STORAGE_KEY = 'slow-notes-pet';
-const animationUrl = new URL('./assets/brachio-pet.json', import.meta.url).href;
-const playerUrl = new URL('./vendor/lottie.min.js', import.meta.url).href;
 const stillUrl = new URL('./assets/brachio.png', import.meta.url).href;
+const doorFrameUrl = new URL('./assets/pet-v4/door-frame.svg', import.meta.url).href;
+const doorPanelUrl = new URL('./assets/pet-v4/door-panel.svg', import.meta.url).href;
+const DOOR_DURATION = 1680;
 const OBSTACLES = '.site-header, .site-header .main-nav, #mobile-menu, .mobile-dock, .mobile-nav, .bottom-nav, [data-pet-obstacle]';
 const clamp = (number, min, max) => Math.min(max, Math.max(min, number));
 const finite = value => typeof value === 'number' && Number.isFinite(value);
-let playerPromise;
 let mountedPet;
 
 /** Pixel coordinates are kept inside the visible, unobstructed viewport. */
@@ -30,22 +30,6 @@ export function restorePetPosition(ratio, bounds) {
   }, bounds);
 }
 
-function getPlayer() {
-  if (window.lottie) return Promise.resolve(window.lottie);
-  if (!playerPromise) {
-    playerPromise = new Promise((resolve, reject) => {
-      const script = document.createElement('script');
-      script.src = playerUrl; script.async = true; script.dataset.brachioPlayer = '';
-      script.onload = () => {
-        if (window.lottie) resolve(window.lottie);
-        else { playerPromise = undefined; reject(new Error('Lottie 未能加载')); }
-      };
-      script.onerror = () => { script.remove(); playerPromise = undefined; reject(new Error('Lottie 未能加载')); };
-      document.head.append(script);
-    });
-  }
-  return playerPromise;
-}
 function readPreferences() {
   try {
     const stored = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}'), point = stored?.position;
@@ -61,7 +45,7 @@ export function mountPet({ trigger = '#pet-toggle' } = {}) {
   const media = window.matchMedia('(prefers-reduced-motion: reduce)');
   const triggerButton = typeof trigger === 'string' ? document.querySelector(trigger) : trigger;
   const controller = new AbortController(), options = { signal: controller.signal };
-  let animation, destroyed = false, greetingTimer, transitionTimer, layoutFrame, gazeFrame;
+  let destroyed = false, greetingTimer, transitionTimer, transitionState = null, layoutFrame, gazeFrame;
   let greetingIndex = 0, drag = null, suppressClickUntil = 0, position = {x:0,y:0}, bounds, obstructed = false;
   let eyeGroups = [], gaze = {x:0,y:0}, gazeTarget = {x:0,y:0};
   const greetings = ['嗨，我是布拉吉奥。', '别着急，慢慢来就好。', '一起发一会儿呆吧。'];
@@ -71,20 +55,28 @@ export function mountPet({ trigger = '#pet-toggle' } = {}) {
     <p class="brachio-pet__speech" role="status" aria-live="polite" hidden></p>
     <p id="brachio-pet-help" class="brachio-pet__sr-only">可以拖动我。聚焦角色后，方向键移动，Shift 加方向键加速，Home 回到左下角，Esc 收起，Enter 或空格打招呼。</p>
     <div class="brachio-pet__stage">
+      <span class="brachio-pet__door" aria-hidden="true"><img class="brachio-pet__door-frame" src="${doorFrameUrl}" alt="" draggable="false"><span class="brachio-pet__door-panel"><img src="${doorPanelUrl}" alt="" draggable="false"></span></span>
       <div class="brachio-pet__tools">
         <button type="button" class="brachio-pet__control" data-pet-pause aria-label="暂停动画" title="暂停动画"></button>
         <button type="button" class="brachio-pet__control" data-pet-home aria-label="让布拉吉奥回到左下角" title="回到左下角"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M4 10 10 4l6 6M6 9v7h8V9M9 16v-4h2v4"/></svg></button>
         <button type="button" class="brachio-pet__control" data-pet-hide aria-label="隐藏布拉吉奥" title="隐藏布拉吉奥"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="m6 6 8 8M14 6l-8 8"/></svg></button>
       </div>
       <button type="button" class="brachio-pet__character" aria-label="布拉吉奥，拖动或打个招呼" aria-describedby="brachio-pet-help" aria-keyshortcuts="ArrowUp ArrowDown ArrowLeft ArrowRight Home Escape" title="拖动我，或点一下打招呼">
-        <img class="brachio-pet__still" src="${stillUrl}" alt="" width="65" height="128" draggable="false">
-        <span class="brachio-pet__animation" aria-hidden="true"></span>
+        <span class="brachio-pet__passage"><span class="brachio-pet__walker"><span class="brachio-pet__artwork" aria-hidden="true">
+          <img class="brachio-pet__still" src="${stillUrl}" alt="" width="186" height="360" draggable="false">
+          <svg class="brachio-pet__standing" viewBox="0 0 186 360" preserveAspectRatio="xMidYMax meet" focusable="false" xmlns="http://www.w3.org/2000/svg">
+            <defs><clipPath id="brachio-pet-eye-crop"><rect x="64" y="33" width="12" height="12"/></clipPath></defs>
+            <image href="${stillUrl}" width="186" height="360"/>
+            <rect x="64" y="33" width="12" height="12" fill="#27b67c"/>
+            <g data-pet-gaze><g clip-path="url(#brachio-pet-eye-crop)"><image href="${stillUrl}" width="186" height="360"/></g></g>
+          </svg>
+        </span></span></span>
       </button>
     </div>`;
   document.body.append(root);
   const pauseButton = root.querySelector('[data-pet-pause]'), hideButton = root.querySelector('[data-pet-hide]');
   const homeButton = root.querySelector('[data-pet-home]'), characterButton = root.querySelector('.brachio-pet__character');
-  const animationContainer = root.querySelector('.brachio-pet__animation'), speech = root.querySelector('.brachio-pet__speech');
+  const artwork = root.querySelector('.brachio-pet__artwork'), speech = root.querySelector('.brachio-pet__speech');
   const motionAllowed = () => !preferences.paused && !media.matches && !document.hidden;
   function save() { try { localStorage.setItem(STORAGE_KEY, JSON.stringify(preferences)); } catch { /* Preferences still work for this page. */ } }
   function viewport() {
@@ -124,19 +116,23 @@ export function mountPet({ trigger = '#pet-toggle' } = {}) {
   function updateLayout() {
     layoutFrame = null; if (destroyed) return;
     if (drag) finishDrag(false);
-    bounds = readBounds(); place(restorePetPosition(preferences.position,bounds));
+    const previousBounds=bounds;
+    bounds = readBounds();
+    if(transitionState&&previousBounds&&['minX','maxX','minY','maxY','width','height'].some(key=>Math.abs(bounds[key]-previousBounds[key])>.5)) settleTransition();
+    place(restorePetPosition(preferences.position,bounds));
     root.inert = preferences.hidden || obstructed; root.setAttribute('aria-hidden',String(preferences.hidden || obstructed));
     if (obstructed) { speech.hidden=true;resetGaze(); }
     sync();
   }
   function scheduleLayout() { if (!layoutFrame) layoutFrame=requestAnimationFrame(updateLayout); }
   function resetPosition(announce = true) {
-    finishDrag(false); preferences.position=null; updateLayout();save();resetGaze();
+    finishDrag(false);settleTransition();preferences.position=null;updateLayout();save();resetGaze();
     if(announce) speak('回到小角落，继续陪你。');
   }
   function moveBy(x,y) {
+    settleTransition();
     bounds=readBounds();place({x:position.x+x,y:position.y+y});
-    preferences.position=normalizePetPosition(position,bounds);save();resetGaze();
+    preferences.position=normalizePetPosition(position,bounds);save();resetGaze();sync();
   }
   function applyGaze() {
     eyeGroups.forEach((group,index)=>group.setAttribute('transform',`translate(${(gaze.x*(index===0 ? .85 : 1)).toFixed(3)} ${gaze.y.toFixed(3)})`));
@@ -144,30 +140,22 @@ export function mountPet({ trigger = '#pet-toggle' } = {}) {
   function resetGaze() {cancelAnimationFrame(gazeFrame);gazeFrame=null;gaze={x:0,y:0};gazeTarget={x:0,y:0};applyGaze();}
   function stepGaze() {
     gazeFrame=null;
-    if(!motionAllowed() || preferences.hidden || obstructed || drag) {resetGaze();return;}
+    if(!motionAllowed() || preferences.hidden || obstructed || drag || transitionState) {resetGaze();return;}
     gaze.x+=(gazeTarget.x-gaze.x)*.22;gaze.y+=(gazeTarget.y-gaze.y)*.22;applyGaze();
     if(Math.abs(gazeTarget.x-gaze.x)+Math.abs(gazeTarget.y-gaze.y)>.025) gazeFrame=requestAnimationFrame(stepGaze);
   }
   function lookAt(event) {
-    if(!eyeGroups.length || event.pointerType==='touch' || !motionAllowed() || preferences.hidden || obstructed || drag) return;
-    const rect=animationContainer.getBoundingClientRect(), scale=Math.min(rect.width/252,rect.height/244);
-    // Original eyes: layer 3 at (61.216,63.269), layer 5 at (72.675,49.2).
-    const eyeX=rect.left+(rect.width-252*scale)/2+66.95*scale, eyeY=rect.bottom-244*scale+56.23*scale;
+    if(!eyeGroups.length || event.pointerType==='touch' || !motionAllowed() || preferences.hidden || obstructed || drag || transitionState) return;
+    const rect=artwork.getBoundingClientRect(), scale=Math.min(rect.width/186,rect.height/360);
+    const eyeX=rect.left+(rect.width-186*scale)/2+70*scale, eyeY=rect.bottom-360*scale+39*scale;
     const distance=Math.max(140,viewport().width*.2);
-    gazeTarget={x:clamp((event.clientX-eyeX)/distance,-1,1)*3.4,y:clamp((event.clientY-eyeY)/distance,-1,1)*2.7};
+    gazeTarget={x:clamp((event.clientX-eyeX)/distance,-1,1)*5.5,y:clamp((event.clientY-eyeY)/distance,-1,1)*4};
     if(!gazeFrame) gazeFrame=requestAnimationFrame(stepGaze);
   }
   function connectEyes() {
-    eyeGroups=[];
-    // Transform-only wrappers preserve every original path and stroke, and
-    // Bodymovin retains its own layer transforms and original limb animation.
-    for(const id of [3,5]) {
-      const layer=animationContainer.querySelector(`.brachio-pet__eye-layer--${id}`); if(!layer) continue;
-      const wrapper=document.createElementNS('http://www.w3.org/2000/svg','g'); wrapper.setAttribute('data-pet-gaze',String(id));
-      while(layer.firstChild) wrapper.append(layer.firstChild);
-      layer.append(wrapper);eyeGroups.push(wrapper);
-    }
-    root.dataset.gazeReady=String(eyeGroups.length===2);resetGaze();
+    // Reuse the original PNG's eye pixels instead of drawing a replacement eye.
+    eyeGroups=[...artwork.querySelectorAll('[data-pet-gaze]')];
+    root.dataset.gazeReady=String(eyeGroups.length===1);resetGaze();
   }
   function sync() {
     const paused=preferences.paused||media.matches;
@@ -175,16 +163,29 @@ export function mountPet({ trigger = '#pet-toggle' } = {}) {
     const label=media.matches?'已按系统设置减少动画':paused?'继续动画':'暂停动画';
     pauseButton.setAttribute('aria-label',label);pauseButton.title=label;
     pauseButton.innerHTML=paused?'<svg viewBox="0 0 20 20" aria-hidden="true"><path d="m7 5 7 5-7 5Z"/></svg>':'<svg viewBox="0 0 20 20" aria-hidden="true"><path d="M7 5v10M13 5v10"/></svg>';
-    root.classList.toggle('brachio-pet--paused',paused); root.inert=preferences.hidden||obstructed;
-    root.setAttribute('aria-hidden',String(preferences.hidden||obstructed));
+    root.classList.toggle('brachio-pet--paused',paused); root.inert=preferences.hidden||obstructed||Boolean(transitionState);
+    root.setAttribute('aria-hidden',String(preferences.hidden||obstructed||Boolean(transitionState)));
     if(triggerButton) {
       triggerButton.setAttribute('aria-controls',root.id);triggerButton.setAttribute('aria-pressed',String(!preferences.hidden));
       const label=preferences.hidden?'显示布拉吉奥':'隐藏布拉吉奥';triggerButton.setAttribute('aria-label',label);triggerButton.title=label;
     }
-    if(animation) {if(paused||preferences.hidden||document.hidden||obstructed) animation.pause();else animation.play();}
     if(paused||preferences.hidden||document.hidden||obstructed) resetGaze();
   }
-  function clearTransition() {clearTimeout(transitionTimer);root.classList.remove('brachio-pet--entering','brachio-pet--leaving');}
+  function clearTransition() {clearTimeout(transitionTimer);transitionTimer=null;transitionState=null;root.dataset.petTransition='idle';root.classList.remove('brachio-pet--entering','brachio-pet--leaving');}
+  function settleTransition() {clearTransition();root.hidden=preferences.hidden;}
+  function beginTransition(state) {
+    clearTransition();resetGaze();
+    const view=viewport(), center=position.x+bounds.width/2, doorWidth=bounds.width*.86;
+    const preferred=bounds.width*.94, right=view.left+view.width-center-doorWidth/2-5, left=center-view.left-doorWidth/2-5;
+    const side=right>=preferred||right>=left?1:-1, distance=Math.max(doorWidth*.6,Math.min(preferred,side>0?right:left));
+    root.dataset.doorSide=side>0?'right':'left';
+    root.style.setProperty('--pet-door-offset',`${(side*distance).toFixed(2)}px`);
+    root.style.setProperty('--pet-door-start',`${(side*(distance+bounds.width*.32)).toFixed(2)}px`);
+    root.style.setProperty('--pet-door-duration',`${DOOR_DURATION}ms`);
+    transitionState=state;root.dataset.petTransition=state;root.hidden=false;
+    void root.offsetWidth;root.classList.add(`brachio-pet--${state}`);sync();
+    transitionTimer=setTimeout(()=>{if(destroyed)return;settleTransition();sync();},DOOR_DURATION+40);
+  }
   function returnFocus() {
     const candidates=[triggerButton,...document.querySelectorAll('[data-pet-toggle], [data-menu-pet]')].filter(Boolean);
     const visible=candidates.find(button=>button.getClientRects().length&&!button.closest('[hidden]'));
@@ -198,15 +199,15 @@ export function mountPet({ trigger = '#pet-toggle' } = {}) {
       clearTimeout(greetingTimer);speech.hidden=true;
       if(restoreFocus&&root.contains(document.activeElement)) returnFocus();
       if(!root.hidden&&changed&&motionAllowed()) {
-        root.classList.add('brachio-pet--leaving');transitionTimer=setTimeout(()=>{root.hidden=true;clearTransition();},240);
+        beginTransition('leaving');
       } else root.hidden=true;
     } else {
       root.hidden=false;updateLayout();
-      if(changed&&motionAllowed()) {void root.offsetWidth;root.classList.add('brachio-pet--entering');transitionTimer=setTimeout(clearTransition,390);}
+      if(changed&&motionAllowed()) beginTransition('entering');
     }
     save();sync();
   }
-  function setPaused(paused) {preferences.paused=paused;save();sync();}
+  function setPaused(paused) {preferences.paused=paused;if(paused)settleTransition();save();sync();}
   function speak(message,duration=3500) {
     if(preferences.hidden||obstructed) return;
     clearTimeout(greetingTimer);speech.textContent=message;speech.hidden=false;placeSpeech();
@@ -214,8 +215,8 @@ export function mountPet({ trigger = '#pet-toggle' } = {}) {
   }
   function greet() {if(preferences.hidden)setHidden(false);speak(greetings[greetingIndex++%greetings.length]);}
   function startDrag(event) {
-    if(!event.isPrimary||event.button!==0||preferences.hidden) return;
-    clearTransition();resetGaze();bounds=readBounds();
+    if(!event.isPrimary||event.button!==0||preferences.hidden||drag||transitionState) return;
+    settleTransition();resetGaze();bounds=readBounds();
     drag={id:event.pointerId,startX:event.clientX,startY:event.clientY,origin:{...position},saved:preferences.position?{...preferences.position}:null,moved:false};
     characterButton.setPointerCapture(event.pointerId);characterButton.focus({preventScroll:true});
   }
@@ -253,7 +254,7 @@ export function mountPet({ trigger = '#pet-toggle' } = {}) {
   characterButton.addEventListener('pointermove',dragMove,{...options,passive:false});
   characterButton.addEventListener('pointerup',endDrag,options);
   characterButton.addEventListener('pointercancel',endDrag,options);
-  characterButton.addEventListener('lostpointercapture',()=>finishDrag(false),options);
+  characterButton.addEventListener('lostpointercapture',event=>{if(drag?.id===event.pointerId)finishDrag(false);},options);
   characterButton.addEventListener('dragstart',event=>event.preventDefault(),options);
   characterButton.addEventListener('keydown',event=>{
     const step=event.shiftKey?32:12, moves={ArrowLeft:[-step,0],ArrowRight:[step,0],ArrowUp:[0,-step],ArrowDown:[0,step]};
@@ -263,9 +264,9 @@ export function mountPet({ trigger = '#pet-toggle' } = {}) {
   },options);
   document.addEventListener('pointermove',lookAt,{...options,passive:true});
   document.documentElement.addEventListener('pointerleave',resetGaze,options);
-  window.addEventListener('blur',()=>{finishDrag(false);resetGaze();},options);
-  document.addEventListener('visibilitychange',()=>{finishDrag(false);resetGaze();sync();},options);
-  media.addEventListener('change',()=>{clearTransition();root.hidden=preferences.hidden;resetGaze();sync();},options);
+  window.addEventListener('blur',()=>{finishDrag(false);settleTransition();resetGaze();sync();},options);
+  document.addEventListener('visibilitychange',()=>{finishDrag(false);settleTransition();resetGaze();sync();},options);
+  media.addEventListener('change',()=>{settleTransition();resetGaze();sync();},options);
   window.addEventListener('resize',scheduleLayout,options);
   window.visualViewport?.addEventListener('resize',scheduleLayout,options);
   window.visualViewport?.addEventListener('scroll',scheduleLayout,options);
@@ -283,29 +284,11 @@ export function mountPet({ trigger = '#pet-toggle' } = {}) {
     }
   },options);
   root.hidden=preferences.hidden;updateLayout();sync();
-  const ready=Promise.all([
-    getPlayer(),fetch(animationUrl,{signal:controller.signal}).then(response=>{if(!response.ok)throw new Error('布拉吉奥动画未能加载');return response.json();}),
-  ]).then(([lottie,data])=>{
-    if(destroyed) return;
-    // Annotate only original eye layers in memory. Layer 6 is the pink mouth;
-    // layer 7 combines head, neck and body and must never be displaced alone.
-    for(const layer of data.layers||[]) if([3,5].includes(layer.ind)) layer.cl=`${layer.cl||''} brachio-pet__eye-layer--${layer.ind}`.trim();
-    return new Promise(resolve=>{
-      animation=lottie.loadAnimation({container:animationContainer,renderer:'svg',loop:true,autoplay:false,animationData:data,rendererSettings:{preserveAspectRatio:'xMidYMax meet',progressiveLoad:true}});
-      animation.addEventListener('DOMLoaded',()=>{
-        if(destroyed){resolve();return;}
-        // Light SVG omits expressions; loop the original 0–19 keyframes.
-        animation.setSpeed(.48);animation.playSegments([0,19],true);animationContainer.querySelector('svg')?.setAttribute('focusable','false');
-        root.classList.add('brachio-pet--ready');connectEyes();sync();resolve();
-      });
-      animation.addEventListener('data_failed',()=>{root.classList.remove('brachio-pet--ready');eyeGroups=[];pauseButton.hidden=true;resolve();});
-    });
-  }).catch(()=>{
-    if(destroyed)return;root.classList.remove('brachio-pet--ready');eyeGroups=[];pauseButton.hidden=true;
-    // Original local PNG remains draggable and summonable when Lottie fails.
-  });
+  connectEyes();
+  const originalImage=root.querySelector('.brachio-pet__still');
+  const ready=originalImage.decode().then(()=>{if(destroyed)return;root.classList.add('brachio-pet--ready');sync();}).catch(()=>{if(!destroyed)root.classList.remove('brachio-pet--ready');});
   mountedPet={ready,show:()=>setHidden(false),hide:()=>setHidden(true,true),toggle:()=>setHidden(!preferences.hidden,true),pause:()=>setPaused(true),play:()=>setPaused(false),greet,resetPosition,moveBy,
-    destroy(){destroyed=true;controller.abort();clearTimeout(greetingTimer);clearTransition();cancelAnimationFrame(layoutFrame);resetGaze();finishDrag(false);resizeObserver?.disconnect();mutationObserver.disconnect();animation?.destroy();root.remove();triggerButton?.removeAttribute('aria-controls');triggerButton?.removeAttribute('aria-pressed');mountedPet=undefined;},
+    destroy(){destroyed=true;controller.abort();clearTimeout(greetingTimer);clearTransition();cancelAnimationFrame(layoutFrame);resetGaze();finishDrag(false);resizeObserver?.disconnect();mutationObserver.disconnect();root.remove();triggerButton?.removeAttribute('aria-controls');triggerButton?.removeAttribute('aria-pressed');mountedPet=undefined;},
   };
   return mountedPet;
 }
