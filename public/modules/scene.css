@@ -44,7 +44,7 @@
 /* Keep the transparent header legible when local daylight differs from UI theme. */
 :root[data-scene-phase=night] body[data-page=home] .site-header:not(.scrolled){color:#f5f1da}
 :root:not([data-scene-phase=night]) body[data-page=home] .site-header:not(.scrolled){color:#25362d}
-:root[data-scene-phase=night] body[data-page=home] .site-header:not(.scrolled) .brand>img.brand-ubhc{mix-blend-mode:normal;background:#fffdf5;border-radius:5px}
+:root[data-scene-phase=night] body[data-page=home] .site-header:not(.scrolled) .brand>img.brand-ubhc{mix-blend-mode:normal;background:transparent;filter:drop-shadow(0 0 2px #fff9)}
 .scene-effects{position:absolute;inset:0;z-index:4;pointer-events:none;overflow:hidden;border-radius:inherit}
 .scene-effects>div{position:absolute;inset:0;pointer-events:none;opacity:0;transition:opacity 1s}
 .scene-rain,.scene-snow,.scene-season-particles{mask-image:linear-gradient(to right,#0007,transparent 17%,transparent 40%,#0008 57%,#000)}
