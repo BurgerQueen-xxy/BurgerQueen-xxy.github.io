@@ -38,5 +38,6 @@
 - `journal-official.jpg`：https://cdn.imweb.me/upload/S2020070945bd60b018bf8/8783f0c013359.jpg ，来源 https://en.joguman.com/downloads_inner/?bmode=view&idx=172585463&t=board 。
 - `woody-official.jpg`：https://cdn.imweb.me/upload/S2020070945bd60b018bf8/fa8a21c263cb0.jpg ，来源 https://en.joguman.com/downloads_inner/?bmode=view&idx=172237278&t=board 。
 - `lucky-official.jpg`：https://cdn.imweb.me/upload/S2020070945bd60b018bf8/90bd1dc9b9cb2.jpg ，来源 https://en.joguman.com/downloads_inner/?bmode=view&idx=162983351&t=board 。
-- `wenkai.woff2`：LXGW WenKai TC，由 Google Fonts 提供的文本子集，字体版权与 SIL OFL 许可见 `wenkai-OFL.txt`。未包含的新增文字回退到系统楷体或中文字体。
+- 当前全站字体：小赖字体 Xiaolai v3.126，本地 WOFF2 常用字／扩展字子集；来源、许可及重新生成方式见 `FONTS.md`。
+- 历史素材 `wenkai.woff2`：LXGW WenKai TC，由 Google Fonts 提供，字体版权与 SIL OFL 许可见 `wenkai-OFL.txt`。当前页面不再加载。
 - 动态伴宠来源与播放器许可见 `SOURCES-pet.md`。
