@@ -1,4 +1,4 @@
-import { renderPassport, syncPassport } from './modules/passport.js';
+import { renderPassport, syncPassport, disposePassport } from './modules/passport.js';
 import { mountScene, syncScene } from './modules/scene.js';
 import { mountPet } from './pet.js';
 import { renderIsland, syncIsland, categoryArt, weatherIcon, renderStoryCards } from './modules/island.js';
@@ -113,6 +113,7 @@ function detail(slug) {
 function notFound() { return `<div class="empty-state page-empty"><img src="./assets/brachio.png" width="55" height="108" alt="布拉吉奥"><h1>好像走到了一条小岔路。</h1><p>这篇手记还没有写好，先回去逛逛吧。</p>${linkArrow('#/','回到首页')}</div>`; }
 
 function render() {
+  disposePassport();
   const raw = location.hash.replace(/^#/, '') || '/';
   const [pathname, query=''] = raw.split('?');
   const params = new URLSearchParams(query);

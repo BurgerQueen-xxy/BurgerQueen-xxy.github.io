@@ -1,50 +1,36 @@
-/* Official clouds, shrubs and characters stay intact. These palettes and weather
-   particles are site-authored compositing, not official JOGUMAN illustrations. */
-.island-hero[data-scene-season]{
-  --scene-sky:#c4e6f7;--scene-horizon:#eef3dc;--scene-ground:#d6e7ad;
-  --scene-ink:#25362d;--scene-accent:#376348;--scene-cloud-opacity:.86;
-  --scene-cloud-filter:none;--scene-tree-filter:none;--scene-land-light:1;
-  --scene-particle:#d7a86e;--scene-veil:#b3c5c8;
-  background:linear-gradient(180deg,var(--scene-sky) 0%,var(--scene-sky) 55%,var(--scene-horizon) 100%);
-  color:var(--scene-ink);transition:background-color 1.2s,color .7s;
+/* Complete official wallpaper scenes. Foreground weather never alters the character artwork. */
+.island-hero{height:clamp(680px,56.25vw,960px);background:#8dd2f3;color:#283b2b}
+.island-hero:after{display:none}
+.hero-official{position:absolute;inset:0;display:block;pointer-events:none}
+.hero-official img{width:100%;height:100%;object-fit:cover;object-position:center;display:block}
+.island-hero-copy{left:7%;top:145px;max-width:440px}
+.island-hero-copy h1{font-size:clamp(40px,3.6vw,60px);line-height:1.4;letter-spacing:3px}
+:root .island-hero .island-hero-copy h1 em{color:#315f42}
+.island-hero-copy>p{font-size:15px;line-height:1.9;margin-top:18px}
+.island-primary{font-size:14px;padding:12px 24px;margin-top:25px;box-shadow:0 3px 0 #203d2926}
+.island-weather{top:109px;right:6%;padding:12px 18px;border-radius:18px}
+.hero-art-credit{position:absolute;right:28px;bottom:20px;z-index:6;font:7px/1.5 var(--body);letter-spacing:1.8px;opacity:.52}
+.island-hero[data-scene-art=hanok]{background:#a9d8ea}
+.island-hero[data-scene-art=snow]{background:#00577d;color:#fff7df}
+:root .island-hero[data-scene-art=snow] .island-hero-copy h1 em{color:#e6dda6}
+:root body[data-page=home] .site-header:not(.scrolled){color:#283b2b}
+:root[data-scene-art=snow] body[data-page=home] .site-header:not(.scrolled){color:#fff7df}
+:root body[data-page=home] .site-header:not(.scrolled) .brand>img.brand-ubhc{background:transparent;filter:none}
+:root body[data-page=home] .site-header:not(.scrolled) .icon-button{background:#fff9e8a3;color:#2f4937;border-color:#61755b55}
+.island-hero .island-weather{background:#fffdf5dd;color:#2d4031;border-color:#fff9}
+.island-hero .weather-mini-clock{border-color:#33472c26}
+@media(min-width:1600px){.island-hero-copy{top:185px;left:8%}}
+@media(min-width:701px) and (max-width:1000px){.island-hero-copy{left:5%;top:170px}.island-hero-copy h1{font-size:40px}.island-hero-copy>p{font-size:13px}.island-weather{top:95px;right:4%}}
+@media(max-width:700px){
+ .island-hero{height:max(780px,196.2vw)}
+ .hero-official img{object-fit:cover;object-position:center bottom}
+ .island-hero-copy{left:7%;top:195px;max-width:86%}
+ .island-hero-copy h1{font-size:38px;line-height:1.35;letter-spacing:2px}
+ .island-hero-copy>p{font-size:12px;line-height:1.9;margin-top:14px}
+ .island-primary{font-size:12px;padding:10px 19px;margin-top:16px}
+ .island-weather{left:7%;right:7%;top:91px;gap:10px;padding:10px 13px;max-width:none}
+ .hero-art-credit{right:15px;bottom:17px;font-size:5px}
 }
-.island-hero[data-scene-season=spring]{--scene-sky:#d4eaf3;--scene-horizon:#f8e8d8;--scene-ground:#d9e9b8;--scene-particle:#edb4be}
-.island-hero[data-scene-season=summer]{--scene-sky:#bde3f1;--scene-horizon:#e4efcc;--scene-ground:#cce3a1;--scene-particle:#e9e9b8}
-.island-hero[data-scene-season=autumn]{--scene-sky:#dbe6e6;--scene-horizon:#f6e4c5;--scene-ground:#e5d5a4;--scene-tree-filter:sepia(.48) saturate(.85) hue-rotate(343deg);--scene-particle:#bd8650}
-.island-hero[data-scene-season=winter]{--scene-sky:#d7e7ed;--scene-horizon:#edf0e8;--scene-ground:#e2e9dd;--scene-tree-filter:saturate(.48) brightness(1.1);--scene-particle:#e8eee7}
-.island-hero[data-scene-phase=morning]{--scene-sky:#dee9e6;--scene-horizon:#f9e8cd}
-.island-hero[data-scene-phase=evening]{--scene-sky:#e5c9b9;--scene-horizon:#f8dfad;--scene-cloud-opacity:.72;--scene-cloud-filter:sepia(.2);--scene-land-light:.9}
-.island-hero[data-scene-weather=cloud]{--scene-cloud-opacity:.92;--scene-sky:#cddce2;--scene-horizon:#e4e7d5;--scene-cloud-filter:brightness(.94);--scene-land-light:.94}
-.island-hero[data-scene-weather=rain],.island-hero[data-scene-weather=storm]{--scene-sky:#b8cbd3;--scene-horizon:#d4ded6;--scene-cloud-opacity:.9;--scene-cloud-filter:brightness(.83);--scene-land-light:.84}
-.island-hero[data-scene-weather=fog]{--scene-sky:#dce4e3;--scene-horizon:#e8ebe0;--scene-cloud-opacity:.45;--scene-land-light:.96}
-.island-hero[data-scene-weather=snow]{--scene-sky:#cfdee5;--scene-horizon:#edf1ec;--scene-ground:#eef1e7;--scene-cloud-opacity:.84;--scene-tree-filter:saturate(.35) brightness(1.25)}
-.island-hero[data-scene-weather=unknown]{--scene-cloud-opacity:.65}
-/* Night wins over every weather palette, and does not recolor character art. */
-.island-hero[data-scene-phase=night]{--scene-sky:#283b51;--scene-horizon:#526567;--scene-ground:#465740;--scene-ink:#f5f1da;--scene-accent:#dce7b3;--scene-cloud-opacity:.23;--scene-cloud-filter:brightness(.85);--scene-land-light:.6;--scene-veil:#bccbd3}
-.island-hero[data-scene-phase=night][data-scene-weather=rain],.island-hero[data-scene-phase=night][data-scene-weather=storm]{--scene-sky:#283b47;--scene-horizon:#405456;--scene-cloud-opacity:.34}
-.island-hero[data-scene-phase=night][data-scene-weather=snow]{--scene-sky:#344858;--scene-ground:#9baea9;--scene-horizon:#627673}
-.island-hero[data-scene-phase=night][data-scene-season=autumn]{--scene-ground:#5f6044}
-.island-hero[data-scene-phase=night][data-scene-season=winter]{--scene-ground:#66766d}
-.island-hero[data-scene-season] .meadow{background:var(--scene-ground);transition:background-color 1s}
-:root .island-hero[data-scene-season] .bushes{filter:var(--scene-tree-filter) brightness(var(--scene-land-light));transition:filter 1s}
-:root .island-hero[data-scene-season] .brick-wall{filter:brightness(var(--scene-land-light));transition:filter 1s}
-:root .island-hero[data-scene-season] .cloud{opacity:var(--scene-cloud-opacity);filter:var(--scene-cloud-filter);transition:opacity .8s,filter .8s}
-:root .island-hero[data-scene-season] .island-hero-copy h1 em{color:var(--scene-accent)}
-:root .island-hero[data-scene-season] .island-sun{display:block;transition:opacity .8s,transform 1s;opacity:.95}
-:root .island-hero[data-scene-season] .island-moon{display:none}
-:root .island-hero[data-scene-season] .island-stars{opacity:0}
-:root .island-hero[data-scene-phase=night] .island-sun{display:none}
-:root .island-hero[data-scene-phase=night] .island-moon{display:block;opacity:.9}
-:root .island-hero[data-scene-phase=night] .island-stars{opacity:.55}
-:root .island-hero[data-scene-phase=morning] .island-sun{background:#f1cf88;transform:translateY(26px)}
-:root .island-hero[data-scene-phase=evening] .island-sun{background:#eeaf74;transform:translateY(54px);box-shadow:0 0 0 16px #f6d9a422}
-:root .island-hero[data-scene-weather=cloud] .island-sun{opacity:.34}
-:root .island-hero:is([data-scene-weather=rain],[data-scene-weather=storm],[data-scene-weather=snow],[data-scene-weather=fog]) :is(.island-sun,.island-moon){opacity:.12}
-:root .island-hero:is([data-scene-weather=rain],[data-scene-weather=storm],[data-scene-weather=snow],[data-scene-weather=fog]) .island-stars{opacity:.09}
-/* Keep the transparent header legible when local daylight differs from UI theme. */
-:root[data-scene-phase=night] body[data-page=home] .site-header:not(.scrolled){color:#f5f1da}
-:root:not([data-scene-phase=night]) body[data-page=home] .site-header:not(.scrolled){color:#25362d}
-:root[data-scene-phase=night] body[data-page=home] .site-header:not(.scrolled) .brand>img.brand-ubhc{mix-blend-mode:normal;background:transparent;filter:drop-shadow(0 0 2px #fff9)}
 .scene-effects{position:absolute;inset:0;z-index:4;pointer-events:none;overflow:hidden;border-radius:inherit}
 .scene-effects>div{position:absolute;inset:0;pointer-events:none;opacity:0;transition:opacity 1s}
 .scene-rain,.scene-snow,.scene-season-particles{mask-image:linear-gradient(to right,#0007,transparent 17%,transparent 40%,#0008 57%,#000)}
@@ -63,17 +49,39 @@
 .island-hero[data-scene-weather=fog] .scene-haze{opacity:.82;animation:scene-fog-drift 18s ease-in-out infinite alternate}
 .scene-puddles{inset:auto 0 63px!important;height:55px;background:radial-gradient(ellipse at 67% 60%,#91b2b652 0 6%,transparent 6.5%),radial-gradient(ellipse at 21% 45%,#91b2b645 0 5%,transparent 5.5%)}
 .island-hero:is([data-scene-weather=rain],[data-scene-weather=storm]) .scene-puddles{opacity:.9}
-.scene-postcard{position:absolute;left:35%;bottom:75px;z-index:5;width:140px;margin:0;padding:7px 7px 10px;background:#fffdf5;box-shadow:3px 5px 0 #4b60451c;transform:rotate(-6deg);color:#466047;pointer-events:none}
-.scene-postcard img{display:block;width:126px;height:126px;object-fit:contain;background:#f1ecdd}
-.scene-postcard figcaption{font:12px/1.6 var(--hand);text-align:center;margin-top:6px;white-space:nowrap}
-.scene-postcard-tape{position:absolute;top:-8px;left:42px;width:52px;height:17px;background:#e1c788b0;transform:rotate(6deg)}
-.island-hero[data-scene-phase=night] .scene-postcard{background:#c7c9b3;color:#33463a;box-shadow:3px 5px 0 #111a192c}
 .scene-description{position:absolute!important;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap;border:0}
 @keyframes scene-rainfall{from{translate:30px 0}to{translate:-120px 930px}}
 @keyframes scene-snowfall{from{translate:0 0;rotate:0deg}to{translate:50px 930px;rotate:180deg}}
 @keyframes scene-leaf-fall{0%{translate:0 0;rotate:0deg}45%{translate:35px 420px;rotate:170deg}100%{translate:-20px 930px;rotate:340deg}}
 @keyframes scene-fog-drift{from{translate:-3% 0}to{translate:3% -12px}}
-@media(max-width:1150px){.scene-postcard{width:116px;bottom:74px}.scene-postcard img{width:102px;height:102px}.scene-postcard figcaption{font-size:10px}}
-@media(max-width:850px){.scene-postcard{display:none}.scene-rain,.scene-snow,.scene-season-particles{mask-image:linear-gradient(to bottom,#0008,transparent 20%,transparent 49%,#0009 64%,#000)}.scene-effects{z-index:3}.scene-drop:nth-child(n+15),.scene-flake:nth-child(n+15){display:none}}
+@media(max-width:700px){.scene-drop:nth-child(n+15),.scene-flake:nth-child(n+15){display:none}}
 @media(prefers-reduced-motion:reduce){.scene-effects *{animation:none!important;transition:none!important}.island-hero[data-scene-season],.island-hero[data-scene-season] *{transition:none!important}.scene-drop,.scene-flake,.scene-leaf{top:calc(var(--x)*7px)}}
 :root[data-scene-paused=true] .scene-effects *{animation-play-state:paused!important}
+
+/* Give the complete landscape its own sky above, without moving its characters. */
+@media(min-width:701px){
+ .island-hero{height:max(680px,calc(56.25vw + 100px))}
+ .hero-official{top:auto;bottom:0;height:auto;width:100%;aspect-ratio:16/9}
+ .hero-official img{object-fit:contain}
+ .island-hero-copy{left:0;top:115px;width:100%;max-width:none;text-align:center;padding:0 24px}
+ .island-hero-copy h1{font-size:clamp(34px,3.8vw,54px);line-height:1.4;letter-spacing:2px}
+ .island-hero-copy h1 br{display:none}
+ .island-hero-copy h1 em{margin-left:10px}
+ .island-hero-copy>p{font-size:14px;line-height:1.8;margin-top:13px}
+ .island-hero-copy>p br{display:none}
+ .island-primary{margin-top:20px;font-size:13px;padding:10px 22px}
+ .island-weather{top:auto;bottom:29px;right:5%}
+ .island-hero[data-scene-phase=night]:not([data-scene-art=snow]){color:#f8f4df}
+ .island-hero[data-scene-phase=night]:not([data-scene-art=snow]):before{z-index:1;content:'';position:absolute;inset:0;background:#172b4059;pointer-events:none}
+ :root .island-hero[data-scene-phase=night] .island-hero-copy h1 em{color:#fff1bd}
+ :root[data-scene-phase=night] body[data-page=home] .site-header:not(.scrolled){color:#fff7df}
+}
+@media(max-width:700px){
+ .island-hero[data-scene-phase=night]:not([data-scene-art=snow]){height:max(850px,216.4vw);background:#bfae9c}
+ .island-hero[data-scene-phase=night]:not([data-scene-art=snow]) .island-hero-copy{top:180px}
+ .island-hero[data-scene-phase=night]:not([data-scene-art=snow]) .island-hero-copy h1{font-size:34px}
+}
+:root .island-hero .island-weather{background:#fffdf5e8;color:#2d4031;border-color:#fff9}
+:root .island-hero .weather-mini-clock{border-color:#33472c26}
+
+@media(min-width:1100px){.island-weather{top:108px;bottom:auto;right:4%}.island-hero-copy h1{font-size:46px}}

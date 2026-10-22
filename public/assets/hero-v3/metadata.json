@@ -1,0 +1,70 @@
+[
+  {
+    "file": "autumn-bbq-web.jpg",
+    "originalSize": [
+      19602,
+      11027
+    ],
+    "webSize": [
+      2560,
+      1440
+    ],
+    "bytes": 380035,
+    "sourcePage": "https://en.joguman.com/downloads_inner/?bmode=view&idx=162980695&t=board",
+    "archive": "wallpaper-bbq-party.zip",
+    "archiveEntry": "Wallpaper_BBQ Party_ PC wallpaper 169.jpg",
+    "originalSHA256": "0e32c42a5cf58d5796ccf296c1549bb2be2a8ed1bf7607470d4e400c565e0c9f",
+    "technicalProcessing": "Pillow LANCZOS proportional resize to width 2560; JPEG quality 90; no crop/repaint/color change"
+  },
+  {
+    "file": "summer-hanok-web.jpg",
+    "originalSize": [
+      19602,
+      11027
+    ],
+    "webSize": [
+      2560,
+      1440
+    ],
+    "bytes": 326095,
+    "sourcePage": "https://en.joguman.com/downloads_inner/?bmode=view&idx=162980401&t=board",
+    "archive": "wallpaper-hanok.zip",
+    "archiveEntry": "Hanok_ PC wallpaper(169).jpg",
+    "originalSHA256": "1cf07077dd42222d413f93201e08ad4d3e81824403a49c9940d289952bd3be8a",
+    "technicalProcessing": "Pillow LANCZOS proportional resize to width 2560; JPEG quality 90; no crop/repaint/color change"
+  },
+  {
+    "file": "winter-snow-web.jpg",
+    "originalSize": [
+      19602,
+      11027
+    ],
+    "webSize": [
+      2560,
+      1440
+    ],
+    "bytes": 105093,
+    "sourcePage": "https://en.joguman.com/downloads_inner/?bmode=view&idx=162980824&t=board",
+    "archive": "wallpaper-merry-christmas.zip",
+    "archiveEntry": "Wallpaper_Merry Christmas/Merry Christmas_ PC wallpaper 169.jpg",
+    "originalSHA256": "0cc3db09c09ec80bad96ffbf0aade0060d7d3ebb677fc367172826db40bf0b61",
+    "technicalProcessing": "Pillow LANCZOS proportional resize to width 2560; JPEG quality 90; no crop/repaint/color change"
+  },
+  {
+    "file": "night-halloween-web.jpg",
+    "originalSize": [
+      4705,
+      2647
+    ],
+    "webSize": [
+      2560,
+      1440
+    ],
+    "bytes": 239811,
+    "sourcePage": "https://en.joguman.com/downloads_inner/?bmode=view&idx=162980771&t=board",
+    "archive": "wallpaper-happy-halloween.zip",
+    "archiveEntry": "Wallpaper_halloween/Halloween_PC wallpaper 169-100.jpg",
+    "originalSHA256": "3becbe27b96be8c30cbc1fcc5c6217f7efaf309c58fe14bba1e31f94ee2b774f",
+    "technicalProcessing": "Pillow LANCZOS proportional resize to width 2560; JPEG quality 90; no crop/repaint/color change"
+  }
+]

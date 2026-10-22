@@ -144,15 +144,15 @@ python -m cms.cli serve --data ..\slow-notes-local-private --source ..\slow-note
 
 ## UBHC 与布拉吉奥伴宠
 
-站点 Logo、护照和浏览器图标统一使用 UBHC 盾徽透明版，原始白底图也保留。透明版经过 ImageGen 去背景处理，属于网页派生文件，并非官方透明母版，详见 `public/assets/UBHC-SOURCE.md`。栏目和背景角色保留官方原画；外食用举杯迪波罗，做饭用戴厨师帽安基罗，户外使用官网史铁哥站姿。来源见 `public/assets/roles/SOURCES.md`。
+站点 Logo 和浏览器图标使用 UBHC 盾徽透明版，原始白底图也保留。护照封面使用原始 UBHC 图像的 SVG 线稿遮罩叠加金属渐变，保留原图结构，呈现烫金效果。透明版经过 ImageGen 去背景处理，属于网页派生文件，并非官方透明母版，详见 `public/assets/UBHC-SOURCE.md`。栏目和背景角色保留官方原画；外食用举杯迪波罗，做饭用戴厨师帽安基罗，户外使用官网史铁哥站姿。来源见 `public/assets/roles/SOURCES.md`。
 
 左下角布拉吉奥使用官方完整矢量动画，眼睛跟随鼠标，可拖动、点击打招呼、暂停或隐藏，带进出场动画；隐藏后可从页头或手机「更多」重新召唤。位置归一化保存在本机，方向键也能移动，Home 归位，Esc 收起。偏好只保存在当前浏览器，遵循系统减少动态效果设置。伴宠模块在 `pet.js`、`pet.css`，动画与播放器来源、许可见 `public/assets/SOURCES-pet.md` 和 `public/vendor/lottie-LICENSE.txt`。
 
 ## 天气场景与生活护照
 
-首页根据所选城市天气、当地日出日落及南北半球季节组合官方云朵、植物、角色和季节插画；雨雪、雾、落叶与环境配色由本站制作，不是官方完整气象壁纸。可在天气面板选择「跟随日夜」恢复自动模式。来源与映射见 `public/assets/scenery/SOURCES-scene.md`。
+首页改用完整官方壁纸：温暖季节廊下吃西瓜、秋日朋友烤肉、冬季雪景。电脑保留横屏原图完整比例，上方只延展原天空色；夜间添加独立暗色遮罩。手机使用对应官方竖屏原图，普通夜晚切换弹吉他场景。官方未提供普通夜景的横屏版本，因此不把竖图强行拼成横图。雨雪与雾叠加随天气变化，属于本站效果。可在天气面板选择「跟随日夜」恢复自动模式。出处与图片处理记录见 `public/assets/hero-v3/SOURCES.md`。
 
-护照包含封面、作者页、六栏目生活印章、随记与户外手记、封底，支持目录、按钮、左右方向键和触屏横向滑动。示例信息来自 `content/site.json`。
+护照包含烫金封面、扉页与资料页、六栏目生活印章、世界地图、随记与户外手记、封底。电脑围绕固定书脊双面翻页，手机逐页横滑；支持章节、按钮、方向键和减少动态效果。世界地图懒加载 Natural Earth 轮廓，可选择国家、缩放、拖动和复位，翻离再回来保留视角。来源及许可见 `public/assets/maps/SOURCES.md`。示例信息来自 `content/site.json`；地图默认没有虚构足迹。可配置 `journeys` 数组，每条包含 `name`、`countryCode`、`latitude`、`longitude`、`date`，可选 `slug` 指向真实游记。
 
 ## 部署到 GitHub Pages
 

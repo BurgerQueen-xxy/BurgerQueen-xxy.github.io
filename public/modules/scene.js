@@ -1,5 +1,5 @@
-// Original JOGUMAN artwork, composed with site-owned season and weather effects.
-// No character image is redrawn or recolored. See assets/scenery/SOURCES-scene.md.
+// Complete official JOGUMAN scenes, with separate optional weather effects.
+// Characters retain their original proportions. See assets/hero-v3/SOURCES.md.
 const DEFAULT_CITY = {name:'杭州', latitude:30.2741, longitude:120.1551};
 const TZ = 'Asia/Shanghai';
 const CONDITIONS = new Set(['clear','cloud','rain','snow','fog','storm','unknown']);
@@ -9,13 +9,13 @@ const SEASON_NAMES = {spring:'春天',summer:'夏天',autumn:'秋天',winter:'�
 const PHASE_NAMES = {morning:'清晨',day:'白天',evening:'傍晚',night:'夜晚'};
 const WEATHER_NAMES = {clear:'晴',cloud:'多云',rain:'雨',snow:'雪',fog:'雾',storm:'雷雨',unknown:'天气暂无'};
 const ART = {
-  spring:{src:'./assets/lucky-official.jpg',title:'春天的小幸运',source:'Lucky Brachio Wallpaper'},
-  summer:{src:'./assets/scenery/summer-hanok-art.jpg',title:'吃一片夏天的西瓜',source:'Hanok Wallpaper'},
-  autumn:{src:'./assets/scenery/autumn-bbq-official.jpg',title:'秋日，和朋友坐在一起',source:'BBQ Party Wallpaper'},
-  winter:{src:'./assets/scenery/winter-christmas-official.jpg',title:'冬日的小小祝福',source:'Merry Christmas Wallpaper'},
-  night:{src:'./assets/scenery/night-guitar-official.jpg',title:'月亮出来，慢慢晚安',source:'Late Night Guitar Wallpaper'},
+  spring:{src:'./assets/hero-v3/summer-hanok-web.jpg',mobile:'./assets/hero-v3/summer-hanok-mobile.jpg',key:'hanok',source:'Hanok Wallpaper'},
+  summer:{src:'./assets/hero-v3/summer-hanok-web.jpg',mobile:'./assets/hero-v3/summer-hanok-mobile.jpg',key:'hanok',source:'Hanok Wallpaper'},
+  autumn:{src:'./assets/hero-v3/autumn-bbq-web.jpg',mobile:'./assets/hero-v3/autumn-bbq-mobile.jpg',key:'bbq',source:'BBQ Party Wallpaper'},
+  winter:{src:'./assets/hero-v3/winter-snow-web.jpg',mobile:'./assets/hero-v3/winter-snow-mobile.jpg',key:'snow',source:'Merry Christmas Wallpaper'},
+  night:{src:'./assets/hero-v3/night-guitar-mobile.jpg',mobile:'./assets/hero-v3/night-guitar-mobile.jpg',key:'guitar',source:'Late Night Guitar Wallpaper'},
 };
-let mounted = false, observer, timer, lastSignature = '', postcardEnabled = true;
+let mounted = false, observer, timer, lastSignature = '';
 const finite = Number.isFinite;
 const rad = value => value * Math.PI / 180;
 const read = (key, fallback) => {try{return JSON.parse(localStorage.getItem(key)) ?? fallback;}catch{return fallback;}};
@@ -83,7 +83,7 @@ export function deriveSceneState({date=new Date(),city=DEFAULT_CITY,weather=null
     phaseSource='manual-theme';
   }
   const kind=CONDITIONS.has(condition) ? condition : 'unknown';
-  const art=phase==='night' ? ART.night : ART[season];
+  const art=phase==='night' && season!=='winter' ? {...ART[season],mobile:ART.night.mobile,mobileSource:ART.night.source} : ART[season];
   return {season,phase,condition:kind,city:typeof city.name==='string'?city.name:'所选城市',latitude:city.latitude,phaseSource,art,
     label:`${SEASON_NAMES[season]} · ${PHASE_NAMES[phase]} · ${WEATHER_NAMES[kind]}`};
 }
@@ -98,11 +98,7 @@ function ensureLayers(hero) {
   hero.append(effects);
   const status=document.createElement('p');status.className='scene-description';status.id='scene-description';hero.append(status);
   const described=new Set((hero.getAttribute('aria-describedby')||'').split(/\s+/).filter(Boolean));described.add(status.id);hero.setAttribute('aria-describedby',[...described].join(' '));
-  if(postcardEnabled) {
-    const card=document.createElement('figure');card.className='scene-postcard';
-    card.innerHTML='<img alt="" decoding="async"><figcaption></figcaption><span class="scene-postcard-tape" aria-hidden="true"></span>';
-    hero.append(card);
-  }
+
 }
 
 function currentContext() {
@@ -129,20 +125,21 @@ export function syncScene() {
   hero.dataset.sceneSeason=state.season;hero.dataset.scenePhase=state.phase;hero.dataset.sceneWeather=state.condition;
   hero.dataset.sceneSource=state.phaseSource;
   const description=hero.querySelector('.scene-description');
-  description.textContent=`${state.city}，${state.label}。${state.phaseSource==='manual-theme'?'日夜外观使用手动选择。':'日夜随所在地日照变化。'}画面由 JOGUMAN 官方原图组合，季节色彩与天气动态由本站制作。`;
-  const card=hero.querySelector('.scene-postcard');
-  if(card) {
-    const img=card.querySelector('img');if(img.getAttribute('src')!==state.art.src) img.src=state.art.src;
-    img.alt=`JOGUMAN 官方插画：${state.art.source}`;
-    card.querySelector('figcaption').textContent=state.art.title;
-    card.title=`${state.label} · 插画 © JOGUMAN`;
+  description.textContent=`${state.city}，${state.label}。${state.phaseSource==='manual-theme'?'日夜外观使用手动选择。':'日夜随所在地日照变化。'}背景使用 JOGUMAN 官方完整插画，雨雪与雾的动态效果由本站制作。`;
+  hero.dataset.sceneArt=state.art.key;
+  root.dataset.sceneArt=state.art.key;
+  const picture=hero.querySelector('.hero-official');
+  if(picture) {
+    const img=picture.querySelector('img'), source=picture.querySelector('source');
+    if(source.getAttribute('srcset')!==state.art.mobile) source.srcset=state.art.mobile;
+    if(img.getAttribute('src')!==state.art.src) img.src=state.art.src;
+    img.alt='布拉吉奥和朋友们的日常，JOGUMAN 官方插画';
   }
   document.dispatchEvent(new CustomEvent('slow-scene-change',{detail:state}));
   return state;
 }
 
-export function mountScene({postcard=true} = {}) {
-  postcardEnabled=postcard;
+export function mountScene() {
   if(mounted) return syncScene();
   mounted=true;
   observer=new MutationObserver(()=>syncScene());

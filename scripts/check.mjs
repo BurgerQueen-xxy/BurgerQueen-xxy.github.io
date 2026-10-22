@@ -5,7 +5,7 @@ import { access } from 'node:fs/promises';
 import { root, build, validatePostContent } from './build.mjs';
 import { renderMarkdown } from './markdown.mjs';
 
-for (const filename of ['public/modules/island.js', 'public/modules/widgets.js', 'public/modules/passport.js', 'public/modules/scene.js', 'app.js', 'theme.js', 'pet.js', 'content-client.mjs', 'scripts/markdown.mjs', 'scripts/build.mjs', 'scripts/build-router.mjs', 'scripts/server.mjs', 'scripts/check.mjs', 'scripts/check-runtime.mjs']) {
+for (const filename of ['public/modules/island.js', 'public/modules/widgets.js', 'public/modules/passport.js', 'public/modules/atlas.js', 'public/modules/scene.js', 'app.js', 'theme.js', 'pet.js', 'content-client.mjs', 'scripts/markdown.mjs', 'scripts/build.mjs', 'scripts/build-router.mjs', 'scripts/server.mjs', 'scripts/check.mjs', 'scripts/check-runtime.mjs']) {
   const result = spawnSync(process.execPath, ['--check', path.join(root, filename)], { stdio: 'inherit' });
   if (result.status !== 0) process.exit(result.status || 1);
 }

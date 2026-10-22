@@ -1,0 +1,70 @@
+[
+  {
+    "file": "autumn-bbq-mobile.jpg",
+    "originalSize": [
+      5176,
+      10155
+    ],
+    "webSize": [
+      1080,
+      2119
+    ],
+    "bytes": 219951,
+    "sourcePage": "https://en.joguman.com/downloads_inner/?bmode=view&idx=162980695&t=board",
+    "archive": "wallpaper-bbq-party.zip",
+    "archiveEntry": "Wallpaper_BBQ Party_iPhone lock screen.jpg",
+    "originalSHA256": "1b30fc6b3f7e62bcc44befff804086293f0b009d5a4827e538ba7a68a87cbe0e",
+    "technicalProcessing": "Pillow LANCZOS proportional resize to width 1080; JPEG quality 90; no crop/repaint/color change"
+  },
+  {
+    "file": "summer-hanok-mobile.jpg",
+    "originalSize": [
+      5176,
+      10155
+    ],
+    "webSize": [
+      1080,
+      2119
+    ],
+    "bytes": 208939,
+    "sourcePage": "https://en.joguman.com/downloads_inner/?bmode=view&idx=162980401&t=board",
+    "archive": "wallpaper-hanok.zip",
+    "archiveEntry": "Hanok_iPhone lock screen.jpg",
+    "originalSHA256": "d975ffbcf35f7ea73068546106777e0fc46d43f812980a36508e6f929db7ebfb",
+    "technicalProcessing": "Pillow LANCZOS proportional resize to width 1080; JPEG quality 90; no crop/repaint/color change"
+  },
+  {
+    "file": "winter-snow-mobile.jpg",
+    "originalSize": [
+      5176,
+      10155
+    ],
+    "webSize": [
+      1080,
+      2119
+    ],
+    "bytes": 104893,
+    "sourcePage": "https://en.joguman.com/downloads_inner/?bmode=view&idx=162980824&t=board",
+    "archive": "wallpaper-merry-christmas.zip",
+    "archiveEntry": "Wallpaper_Merry Christmas/Merry Christmas_iPhone lock screen.jpg",
+    "originalSHA256": "383b975440685fb3778093dcd6b095b855561030c0a3309a473784b578ccfd13",
+    "technicalProcessing": "Pillow LANCZOS proportional resize to width 1080; JPEG quality 90; no crop/repaint/color change"
+  },
+  {
+    "file": "night-guitar-mobile.jpg",
+    "originalSize": [
+      2438,
+      5275
+    ],
+    "webSize": [
+      1080,
+      2337
+    ],
+    "bytes": 191137,
+    "sourcePage": "https://en.joguman.com/downloads_inner/?bmode=view&idx=162981207&t=board",
+    "archive": "wallpaper-late-night-guitar.zip",
+    "archiveEntry": "Wallpaper-Late Night Guitar/Wallpaper-Lonesome Night, Guitar-iPhone lock screen.jpg",
+    "originalSHA256": "b440dd97689d62293e5e4e82448f2d72fe7395b1ab4a03c69c385d2e6b1c0ba0",
+    "technicalProcessing": "Pillow LANCZOS proportional resize to width 1080; JPEG quality 90; no crop/repaint/color change"
+  }
+]

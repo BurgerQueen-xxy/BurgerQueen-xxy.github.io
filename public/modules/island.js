@@ -1,3 +1,4 @@
+import { renderPassportPreview } from './passport.js';
 const esc = value => String(value ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const route = name => `#/category/${encodeURIComponent(name)}`;
 const postRoute = post => `#/post/${encodeURIComponent(post.slug)}`;
@@ -49,9 +50,9 @@ export function renderIsland(site, posts) {
   model = {site,posts};
   const collection=selected('收藏',2);
   return `<section class="island-hero" id="top" aria-labelledby="island-title">
-    <div class="island-sky" aria-hidden="true"><div class="island-stars"></div><span class="island-sun"></span><span class="island-moon"></span><img class="cloud cloud-a" src="./assets/scenery/cloud_01_pc.svg" alt=""><img class="cloud cloud-b" src="./assets/scenery/cloud_02_pc.svg" alt=""><img class="cloud cloud-c" src="./assets/scenery/cloud_03_pc.svg" alt=""></div>
+    <picture class="hero-official"><source media="(max-width:700px)" srcset="./assets/hero-v3/autumn-bbq-mobile.jpg"><img src="./assets/hero-v3/autumn-bbq-web.jpg" alt="JOGUMAN 官方插画：朋友们的秋日烤肉聚会" fetchpriority="high" decoding="async"></picture>
     <div class="island-hero-copy"><h1 id="island-title">慢慢生活，<br><em>好好记录。</em></h1><p>和布拉吉奥一起，收集日常的小事。<br>也给小黑猫金子，留一片晒太阳的地方。</p><button class="island-primary" data-scroll-journal>去小岛上逛逛 ${arrow}</button></div>
-    <div class="joguman-landscape"><div class="meadow"></div><div class="bushes" aria-hidden="true"></div><div class="brick-wall" aria-hidden="true"></div><div class="character-party"><img class="party-diplo" src="./assets/diplo.png" alt="迪波罗"><img class="party-ankylo" src="./assets/ankylo.png" alt="安基罗"><button class="party-brachio" data-greet aria-label="和布拉吉奥打个招呼"><img src="./assets/brachio.png" alt="布拉吉奥"></button><img class="party-stego" src="./assets/stego.png" alt="史铁哥"><img class="party-tricera" src="./assets/tricera.png" alt="崔卡拉"><img class="party-woody" src="./assets/woody.png" alt="伍迪"></div><span class="party-note" id="greeting" aria-live="polite">小小的我们，也很重要。</span></div>
+    <span class="hero-art-credit">ILLUSTRATION © JOGUMAN</span>
     <button class="island-weather" data-open-calendar aria-label="打开日历与天气预报" aria-haspopup="dialog"><span class="weather-mini-icon" data-weather-icon>${weatherIcon()}</span><span class="weather-mini-copy"><strong data-weather-city>杭州</strong><small><span data-weather-temp>--</span>C · <span data-weather-label>正在获取天气</span></small></span><span class="weather-mini-clock"><strong data-clock-time>--:--</strong><small data-clock-date>日历与天气预报</small></span></button>
   </section>
   <section class="island-section recent-section" id="journal"><div class="island-inner"><div class="section-bar"><div><p class="island-kicker">RECENT STORIES</p><h2>最近的手记</h2></div><a class="island-link" href="#/journal">查看全部 ${arrow}</a></div><div class="story-grid">${posts.slice(0,3).map(storyCard).join('')}</div></div></section>
@@ -61,7 +62,7 @@ export function renderIsland(site, posts) {
   <section class="island-section outdoor-section" id="outdoor"><div class="island-inner"><div class="postcard" data-section-items="户外">${outdoorItem()}</div><div class="postcard-footer"><span>跟着史铁哥，去外面透透气。</span>${refresh('户外','换个目的地')}${more('户外','全部户外手记')}</div></div></section>
   <section class="island-section scraps-section" id="scraps"><div class="island-inner"><div class="section-bar">${sectionHeading('其他','BITS & PIECES','崔卡拉的生活杂记','想法、日常，和暂时不知道放在哪里的小事。')}${more('其他','所有生活碎片')}</div><div class="scrap-grid" data-section-items="其他">${otherItems()}</div></div></section>
   <section class="island-section jinzi-section" id="jinzi"><div class="island-inner"><div class="section-bar">${sectionHeading('金子','WOODY & JINZI','伍迪看护的金子小窝','给小黑猫金子，一片自己的小天地。')}</div><div class="jinzi-feature">${jinziItem()}</div></div></section>
-  <section class="island-section passport-section" id="passport"><div class="island-inner passport-layout"><a class="passport-cover" href="#/about"><img src="./assets/ubhc-transparent.png" alt="UBHC"><span>慢慢生活俱乐部</span><strong>生活护照</strong><small>MY LITTLE PASSPORT</small></a><div><p class="island-kicker">NICE TO MEET YOU</p><h2>你好，我是${esc(site.author)}。</h2><p>${esc(site.bio)}<br>把自己和世界的相遇，慢慢收进这里。</p><a class="island-link" href="#/about">翻开我的生活护照 ${arrow}</a></div></div></section>
+  <section class="island-section passport-section" id="passport"><div class="island-inner passport-layout">${renderPassportPreview(site)}<div><p class="island-kicker">NICE TO MEET YOU</p><h2>你好，我是${esc(site.author)}。</h2><p>${esc(site.bio)}<br>把自己和世界的相遇，慢慢收进这里。</p><a class="island-link" href="#/about">翻开我的生活护照 ${arrow}</a></div></div></section>
   <section class="letter-section"><img src="./assets/brachio.png" alt="" loading="lazy"><p>布拉吉奥捎来一句话</p><h2>愿你今天也遇见一件小小的好事。</h2><button class="island-link" data-random>随便翻一篇手记 ${arrow}</button></section>`;
 }
 
@@ -79,15 +80,3 @@ export function syncIsland() {
   }));
   document.querySelector('[data-scroll-journal]')?.addEventListener('click',()=>document.querySelector('#journal')?.scrollIntoView({behavior:matchMedia('(prefers-reduced-motion:reduce)').matches?'instant':'smooth'}));
 }
-
-let passportPage=0;
-export function renderPassport(site,posts){
-  model={site,posts};
-  const right=[
-    `<p class="island-kicker">ABOUT ME</p><h2>你好，我是${esc(site.author)}。</h2><p>${esc(site.bio)}</p><p>这里放着平凡日子里的小发现：喜欢的东西、一顿好吃的饭、一次没有计划的散步，还有小黑猫金子的日常。</p><blockquote>不用每一天都很特别。<br>有在好好生活，就已经很好。</blockquote><p>此刻：${esc(site.currentNote)}</p>`,
-    `<p class="island-kicker">MY LITTLE ARCHIVE</p><h2>把日子慢慢收好。</h2><div class="passport-stats">${site.categories.map(c=>`<a href="${route(c.name)}"><img src="./${esc(c.asset)}" alt=""><span>${esc(c.name)}</span><b>${posts.filter(p=>p.category===c.name).length} 篇</b></a>`).join('')}</div><p>每一个栏目，都有一位小伙伴照看。</p>`,
-    `<p class="island-kicker">LITTLE MOMENTS</p><h2>留在口袋里的小事。</h2>${(site.notes||[]).slice(0,3).map(n=>`<div class="passport-note"><time>${esc(n.date.replaceAll('-','.'))}</time><p>${esc(n.text)}</p></div>`).join('')}`
-  ];
-  return `<section class="passport-page"><div class="passport-page-title"><p class="island-kicker">MY LITTLE PASSPORT</p><h1>生活护照</h1><p>把自己与世界的相遇，收进一本护照。</p></div><div class="passport-book"><div class="passport-left"><div class="passport-brand"><img src="./assets/ubhc-transparent.png" alt="UBHC"><span>慢慢生活俱乐部</span></div><div class="passport-id-photo"><img src="./assets/brachio.png" alt="布拉吉奥"></div><small>NAME / 姓名</small><h2>${esc(site.author)}</h2><small>MY LITTLE WORLD / 所在地</small><p>${esc(site.location)}</p><div class="passport-seal">UBHC<br><span>TAKE IT SLOW</span></div></div><div class="passport-right">${right[passportPage]}<span class="passport-page-number">${String(passportPage+1).padStart(2,'0')} / 03</span></div></div><div class="passport-controls"><button class="button" data-passport-turn="-1" ${passportPage===0?'disabled':''}>上一页</button><span>${passportPage+1} / 3</span><button class="button" data-passport-turn="1" ${passportPage===2?'disabled':''}>下一页</button></div><p class="passport-disclosure">${esc(site.sampleNotice)}<br>个人非官方主题 · 角色 © JOGUMAN</p></section>`;
-}
-export function syncPassport(){document.querySelectorAll('[data-passport-turn]').forEach(button=>button.addEventListener('click',()=>{passportPage=Math.min(2,Math.max(0,passportPage+Number(button.dataset.passportTurn)));const top=document.querySelector('.passport-page').getBoundingClientRect().top+scrollY;document.querySelector('.passport-page').outerHTML=renderPassport(model.site,model.posts);syncPassport();window.scrollTo({top:Math.max(0,top-100),behavior:'instant'});}));}
