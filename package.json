@@ -1,0 +1,14 @@
+{
+  "name": "slow-notes",
+  "version": "1.0.0",
+  "private": true,
+  "description": "慢慢来 · 一本关于日常、灵感和慢生活的静态博客",
+  "type": "module",
+  "engines": { "node": ">=20" },
+  "scripts": {
+    "dev": "node scripts/server.mjs --watch",
+    "build": "node scripts/build.mjs",
+    "preview": "node scripts/server.mjs",
+    "check": "node scripts/check.mjs"
+  }
+}
