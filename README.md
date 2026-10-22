@@ -1,6 +1,6 @@
 # 慢慢来 · SLOW NOTES
 
-一本记录收藏、出去吃饭、在家做饭、户外、其他生活碎片，以及小黑猫金子日常的小博客。六个栏目分别由布拉吉奥、迪波罗、安基罗、史铁哥、崔卡拉和伍迪陪伴。原生 HTML、CSS、JavaScript，使用 Node.js 原生脚本构建，不用安装 npm 包。动画使用已随项目打包的 Lottie 播放器。
+一本记录收藏、出去吃饭、在家做饭、户外、其他生活碎片，以及小黑猫金子日常的小博客。六个栏目分别由布拉吉奥、迪波萝、安基罗、史铁哥、崔卡拉和伍迪陪伴。原生 HTML、CSS、JavaScript，使用 Node.js 原生脚本构建，不用安装 npm 包。动画使用已随项目打包的 Lottie 播放器。
 
 当前文章、作者信息、随记和生活收藏都是**可替换的示例内容**，用于展示页面与交互。使用前请替换成自己的故事。站点是个人博客创作示例，不是 JOGUMAN 官方网站。
 
@@ -64,7 +64,7 @@ readingTime: 3 分钟
 | 栏目 | 角色 | 英文名 | 角色图片 |
 | --- | --- | --- | --- |
 | 收藏 | 布拉吉奥 | BRACHIO | `assets/brachio.png` |
-| 出去吃饭 | 迪波罗 | DIPLO | `assets/diplo.png` |
+| 出去吃饭 | 迪波萝 | DIPLO | `assets/diplo.png` |
 | 在家做饭 | 安基罗 | ANKYLO | `assets/ankylo.png` |
 | 户外 | 史铁哥 | STEGO | `assets/stego.png` |
 | 其他 | 崔卡拉 | TRICERA | `assets/tricera.png` |
@@ -144,7 +144,7 @@ python -m cms.cli serve --data ..\slow-notes-local-private --source ..\slow-note
 
 ## UBHC 与布拉吉奥伴宠
 
-站点 Logo 和浏览器图标使用 UBHC 盾徽透明版，原始白底图也保留。护照封面使用原始 UBHC 图像的 SVG 线稿遮罩叠加金属渐变，保留原图结构，呈现烫金效果。透明版经过 ImageGen 去背景处理，属于网页派生文件，并非官方透明母版，详见 `public/assets/UBHC-SOURCE.md`。栏目和背景角色保留官方原画；外食用举杯迪波罗，做饭用戴厨师帽安基罗，户外使用官网史铁哥站姿。来源见 `public/assets/roles/SOURCES.md`。
+站点 Logo 和浏览器图标使用 UBHC 盾徽透明版，原始白底图也保留。护照封面使用原始 UBHC 图像的 SVG 线稿遮罩叠加金属渐变，保留原图结构，呈现烫金效果。透明版经过 ImageGen 去背景处理，属于网页派生文件，并非官方透明母版，详见 `public/assets/UBHC-SOURCE.md`。栏目和背景角色保留官方原画；外食用举杯迪波萝，做饭用戴厨师帽安基罗，户外使用官网史铁哥站姿。来源见 `public/assets/roles/SOURCES.md`。
 
 左下角布拉吉奥使用官方标准站姿 PNG，保留角色原始比例，眼睛跟随鼠标时复用原图眼部像素。可拖动、点击打招呼、暂停或隐藏，隐藏与召唤使用约 1680 毫秒的小门开合和角色走入/走出动画；隐藏后可从页头或手机「更多」重新召唤。位置归一化保存在本机，方向键也能移动，Home 归位，Esc 收起。偏好只保存在当前浏览器，遵循系统减少动态效果设置。伴宠模块在 `pet.js`、`pet.css`，原图、眼部处理和小门说明见 `public/assets/pet-v4/SOURCES.md`。旧 Lottie 素材与播放器保留，但当前伴宠不再加载它们。
 

@@ -11,16 +11,16 @@
 - 尺寸：11384 × 8534，JPEG，1694715 字节。**蓝色不透明背景，单人安基罗与拟人化烟雾**。
 - 已目视确认：安基罗戴白色厨师帽、拿铲子和平底锅；烟雾和原图英文“OH SHIT / NOOOO…”同时保留。没有将普通站姿描述为厨师。
 - 画面留白很大：非背景主体（包括文字和烟）约在 x=41.3%–58.6%、y=59.4%–80.2%；中心约为 **50% / 70%**。普通 `object-fit: cover` 不会自动放大角色，可在容器中采用受控缩放。保持原文件不变。
-- 可选多人场景：`bbq-party-official.jpg`，1920 × 1920，JPEG，225546 字节。官方网页直接原图：https://cdn.imweb.me/upload/S2020070945bd60b018bf8/16bfff68dbd2e.jpg 。画面包含戴厨师帽和橙围裙的安基罗、迪波罗、布拉吉奥等，适合大幅背景，不适合作为单人图标。
+- 可选多人场景：`bbq-party-official.jpg`，1920 × 1920，JPEG，225546 字节。官方网页直接原图：https://cdn.imweb.me/upload/S2020070945bd60b018bf8/16bfff68dbd2e.jpg 。画面包含戴厨师帽和橙围裙的安基罗、迪波萝、布拉吉奥等，适合大幅背景，不适合作为单人图标。
 
-## 迪波罗：官网啤酒原画
+## 迪波萝：官网啤酒原画
 
 - 首选文件：`diplo-beer-official.svg`
 - 来源页面：https://en.joguman.com/characters
 - 官方原图：https://cdn.jogumancdn.com/images/characters/character_ip_02_en.svg
-- 尺寸：402 × 274（SVG viewBox）。透明画布；原 SVG 内的白色英文气泡仍是不透明的。粉色迪波罗手持啤酒。
+- 尺寸：402 × 274（SVG viewBox）。透明画布；原 SVG 内的白色英文气泡仍是不透明的。粉色迪波萝手持啤酒。
 - 主题含义：饮酒/聚餐氛围；它不是明确画有餐厅的“外出吃饭”场景。适配外食栏目是博客自身的栏目映射。
-- 可选文件：`diplo-beer-wallpaper-official.jpg`，1920 × 1920，JPEG，55267 字节，白色不透明背景、迪波罗手持啤酒的另一版官网原画。
+- 可选文件：`diplo-beer-wallpaper-official.jpg`，1920 × 1920，JPEG，55267 字节，白色不透明背景、迪波萝手持啤酒的另一版官网原画。
 - 来源页面：https://en.joguman.com/downloads_inner/?bmode=view&idx=162980505&t=board
 - 原图：https://cdn.imweb.me/upload/S2020070945bd60b018bf8/c36a31a8e6e06.jpg
 
