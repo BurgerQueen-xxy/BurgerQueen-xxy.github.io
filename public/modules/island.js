@@ -52,7 +52,7 @@ export function renderIsland(site, posts) {
   return `<section class="island-hero" id="top" aria-labelledby="island-title">
     <picture class="hero-official"><source media="(max-width:700px)" srcset="./assets/hero-v3/autumn-bbq-mobile.jpg"><img src="./assets/hero-v3/autumn-bbq-web.jpg" alt="JOGUMAN 官方插画：朋友们的秋日烤肉聚会" fetchpriority="high" decoding="async"></picture>
     <div class="island-hero-copy"><h1 id="island-title">慢慢生活，<br><em>好好记录。</em></h1><p>和布拉吉奥一起，收集日常的小事。<br>也给小黑猫金子，留一片晒太阳的地方。</p><button class="island-primary" data-scroll-journal>去小岛上逛逛 ${arrow}</button></div>
-    <span class="hero-art-credit">ILLUSTRATION © JOGUMAN</span>
+    <div class="hero-art-controls"><button class="scene-shuffle" data-scene-shuffle aria-label="随机换一张首页封面">换张封面 <span aria-hidden="true">↻</span></button><span class="hero-art-credit">ILLUSTRATION © JOGUMAN</span></div>
     <button class="island-weather" data-open-calendar aria-label="打开日历与天气预报" aria-haspopup="dialog"><span class="weather-mini-icon" data-weather-icon>${weatherIcon()}</span><span class="weather-mini-copy"><strong data-weather-city>杭州</strong><small><span data-weather-temp>--</span>C · <span data-weather-label>正在获取天气</span></small></span><span class="weather-mini-clock"><strong data-clock-time>--:--</strong><small data-clock-date>日历与天气预报</small></span></button>
   </section>
   <section class="island-section recent-section" id="journal"><div class="island-inner"><div class="section-bar"><div><p class="island-kicker">RECENT STORIES</p><h2>最近的手记</h2></div><a class="island-link" href="#/journal">查看全部 ${arrow}</a></div><div class="story-grid">${posts.slice(0,3).map(storyCard).join('')}</div></div></section>

@@ -5,11 +5,11 @@ const route = name => `#/category/${encodeURIComponent(name)}`;
 const compactQuery = '(max-width: 700px)';
 let model, currentId = 'cover', disposeReader, markId = 0;
 
-// Two masks retain both the original coloured shapes and the original ink details.
-// Nothing in the UBHC artwork is traced, regenerated, or replaced.
+// Only the original black ink is stamped in foil, leaving the green leather visible
+// through the characters. This is the fine-line emblem from the approved cover.
 function foilMark() {
   const id = `ubhc-foil-${++markId}`;
-  return `<svg class="jp-foil-mark" viewBox="0 0 660 469" role="img" aria-label="UBHC 原版徽章，金箔压印"><defs><filter id="${id}-shape" color-interpolation-filters="sRGB"><feColorMatrix type="matrix" values="0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  -2.6 -2.6 -2.6 0 7.2"/></filter><filter id="${id}-ink" color-interpolation-filters="sRGB"><feColorMatrix type="matrix" values="0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  -1.2 -1.6 -.5 1.5 0"/></filter><mask id="${id}-shape-mask" maskUnits="userSpaceOnUse" x="0" y="0" width="660" height="469" style="mask-type:alpha"><image href="./assets/ubhc-logo.jpg" width="660" height="469" filter="url(#${id}-shape)"/></mask><mask id="${id}-ink-mask" maskUnits="userSpaceOnUse" x="0" y="0" width="660" height="469" style="mask-type:alpha"><image href="./assets/ubhc-logo.jpg" width="660" height="469" filter="url(#${id}-ink)"/></mask><linearGradient id="${id}-gold" x1="0" y1="0" x2=".85" y2="1"><stop stop-color="#b68a39"/><stop offset=".28" stop-color="#e3be69"/><stop offset=".5" stop-color="#c39a45"/><stop offset=".68" stop-color="#eacf88"/><stop offset="1" stop-color="#ad7d2d"/></linearGradient><linearGradient id="${id}-edge" x1="0" y1="0" x2=".5" y2="1"><stop stop-color="#fff0ba"/><stop offset=".37" stop-color="#f4d58b"/><stop offset=".54" stop-color="#dcb96b"/><stop offset=".72" stop-color="#fff1bf"/><stop offset="1" stop-color="#e9c573"/></linearGradient><filter id="${id}-emboss" x="-5%" y="-5%" width="110%" height="110%" color-interpolation-filters="sRGB"><feDropShadow dx="0" dy="2.4" stdDeviation=".65" flood-color="#0c251b" flood-opacity=".95"/><feDropShadow dx="0" dy="-.9" stdDeviation=".25" flood-color="#fff0b9" flood-opacity=".45"/></filter></defs><g filter="url(#${id}-emboss)"><rect width="660" height="469" fill="url(#${id}-gold)" mask="url(#${id}-shape-mask)"/><rect width="660" height="469" fill="url(#${id}-edge)" mask="url(#${id}-ink-mask)"/></g></svg>`;
+  return `<svg class="jp-foil-mark" viewBox="0 0 660 469" role="img" aria-label="UBHC 原版线稿，金箔压印"><defs><filter id="${id}-ink" color-interpolation-filters="sRGB"><feColorMatrix type="matrix" values="0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  -1.2 -1.6 -.5 1.5 0"/></filter><mask id="${id}-ink-mask" maskUnits="userSpaceOnUse" x="0" y="0" width="660" height="469" style="mask-type:alpha"><image href="./assets/ubhc-logo.jpg" width="660" height="469" filter="url(#${id}-ink)"/></mask><linearGradient id="${id}-gold" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#b68c48"/><stop offset=".28" stop-color="#ebd99a"/><stop offset=".48" stop-color="#b9944f"/><stop offset=".59" stop-color="#f3e3ae"/><stop offset=".77" stop-color="#d4b879"/><stop offset="1" stop-color="#aa8245"/></linearGradient><filter id="${id}-emboss" x="-3%" y="-3%" width="106%" height="106%" color-interpolation-filters="sRGB"><feDropShadow dx="0" dy="1" stdDeviation=".25" flood-color="#10291f" flood-opacity=".8"/></filter></defs><rect width="660" height="469" fill="url(#${id}-gold)" mask="url(#${id}-ink-mask)" filter="url(#${id}-emboss)"/></svg>`;
 }
 
 function cover(site, back = false, preview = false) {
@@ -62,7 +62,7 @@ export function passportViews(compact) {
 }
 function resolveView(views,id) { return views.find(v=>v.id===id||v.leaves?.includes(id))||views[0]; }
 function paperShapes() {
-  return `<svg class="jp-shape-definitions" width="0" height="0" aria-hidden="true"><defs><clipPath id="jp-leaf-left" clipPathUnits="objectBoundingBox"><path d="M.038 0 Q0 0 0 .03 L0 .97 Q0 1 .038 1 L.88 .993 Q.96 .991 1 .975 L1 .025 Q.96 .009 .88 .007 Z"/></clipPath><clipPath id="jp-leaf-right" clipPathUnits="objectBoundingBox"><path d="M0 .025 Q.04 .009 .12 .007 L.962 0 Q1 0 1 .03 L1 .97 Q1 1 .962 1 L.12 .993 Q.04 .991 0 .975 Z"/></clipPath><clipPath id="jp-turn-left" clipPathUnits="objectBoundingBox"><path class="jp-curve-left" d="M.038 0 Q0 0 0 .03 C0 .32 0 .68 0 .97 Q0 1 .038 1 L.88 .993 Q.96 .991 1 .975 L1 .025 Q.96 .009 .88 .007 Z"/></clipPath><clipPath id="jp-turn-right" clipPathUnits="objectBoundingBox"><path class="jp-curve-right" d="M0 .025 Q.04 .009 .12 .007 L.962 0 Q1 0 1 .03 C1 .32 1 .68 1 .97 Q1 1 .962 1 L.12 .993 Q.04 .991 0 .975 Z"/></clipPath><clipPath id="jp-paper-spread" clipPathUnits="objectBoundingBox"><path d="M.019 0 Q0 0 0 .03 L0 .97 Q0 1 .019 1 L.44 .993 Q.48 .991 .5 .975 Q.52 .991 .56 .993 L.981 1 Q1 1 1 .97 L1 .03 Q1 0 .981 0 L.56 .007 Q.52 .009 .5 .025 Q.48 .009 .44 .007 Z"/></clipPath></defs></svg>`;
+  return `<svg class="jp-shape-definitions" width="0" height="0" aria-hidden="true"><defs><clipPath id="jp-leaf-left" clipPathUnits="objectBoundingBox"><path d="M.038 0 Q0 0 0 .03 L0 .97 Q0 1 .038 1 L.88 .993 Q.96 .991 1 .975 L1 .025 Q.96 .009 .88 .007 Z"/></clipPath><clipPath id="jp-leaf-right" clipPathUnits="objectBoundingBox"><path d="M0 .025 Q.04 .009 .12 .007 L.962 0 Q1 0 1 .03 L1 .97 Q1 1 .962 1 L.12 .993 Q.04 .991 0 .975 Z"/></clipPath><clipPath id="jp-paper-spread" clipPathUnits="objectBoundingBox"><path d="M.019 0 Q0 0 0 .03 L0 .97 Q0 1 .019 1 L.44 .993 Q.48 .991 .5 .975 Q.52 .991 .56 .993 L.981 1 Q1 1 1 .97 L1 .03 Q1 0 .981 0 L.56 .007 Q.52 .009 .5 .025 Q.48 .009 .44 .007 Z"/></clipPath></defs></svg>`;
 }
 function renderView(view) {
   if(view.kind==='cover'||view.kind==='back') return cover(model.site,view.kind==='back');
@@ -81,13 +81,13 @@ function pagination(views,current) {
 export function renderPassport(site,posts) {
   disposeReader?.(); model={site,posts};
   const compact=matchMedia(compactQuery).matches,views=passportViews(compact),current=resolveView(views,currentId);
-  return `<section class="jog-passport"><header class="jp-heading"><h1>生活护照</h1><p>把自己与世界的相遇，收进一本护照。</p></header><div class="jp-reader ${compact?'is-compact':''}" style="--jp-left-clip:url(#jp-leaf-left);--jp-right-clip:url(#jp-leaf-right);--jp-turn-left-clip:url(#jp-turn-left);--jp-turn-right-clip:url(#jp-turn-right);--jp-spread-clip:url(#jp-paper-spread)">${paperShapes()}${controls(views,current)}<div class="jp-viewport"><div class="jp-stage ${current.kind==='cover'?'is-front-closed':current.kind==='back'?'is-back-closed':''}" tabindex="0" role="region" aria-label="可翻阅的生活护照" aria-busy="false"><div class="jp-view is-active view-${current.kind}">${renderView(current)}</div></div></div><div class="jp-pagination">${pagination(views,current)}</div><p class="jp-hint">${compact?'左右轻扫翻页 · 地图可单独拖动浏览':'左右箭头翻阅 · 在地图上慢慢探索世界'}</p></div><p class="jp-disclosure">${esc(site.sampleNotice||'')}</p></section>`;
+  return `<section class="jog-passport"><header class="jp-heading"><h1>生活护照</h1><p>把自己与世界的相遇，收进一本护照。</p></header><div class="jp-reader ${compact?'is-compact':''}" style="--jp-left-clip:url(#jp-leaf-left);--jp-right-clip:url(#jp-leaf-right);--jp-spread-clip:url(#jp-paper-spread)">${paperShapes()}${controls(views,current)}<div class="jp-viewport"><div class="jp-stage ${current.kind==='cover'?'is-front-closed':current.kind==='back'?'is-back-closed':''}" tabindex="0" role="region" aria-label="可翻阅的生活护照" aria-busy="false"><div class="jp-view is-active view-${current.kind}">${renderView(current)}</div></div></div><div class="jp-pagination">${pagination(views,current)}</div><p class="jp-hint">${compact?'左右轻扫翻页 · 地图可单独拖动浏览':'左右箭头翻阅 · 在地图上慢慢探索世界'}</p></div><p class="jp-disclosure">${esc(site.sampleNotice||'')}</p></section>`;
 }
 
 export function syncPassport() {
   const reader=document.querySelector('.jp-reader'); if(!reader)return;
   const media=matchMedia(compactQuery),motion=matchMedia('(prefers-reduced-motion: reduce)');
-  let views=passportViews(media.matches),current=resolveView(views,currentId),turn=null,timer,start,disposed=false;
+  let views=passportViews(media.matches),current=resolveView(views,currentId),turn=null,timer,start,disposed=false,frame=0,clearAnimationListener=()=>{};
   const stage=reader.querySelector('.jp-stage'),viewport=reader.querySelector('.jp-viewport');
   // Lay out each physical page at 460 × 650, then scale the complete content.
   // Resizing therefore preserves both the real passport proportion and its typography.
@@ -101,47 +101,81 @@ export function syncPassport() {
   const sizeObserver=typeof ResizeObserver==='undefined'?null:new ResizeObserver(sizeBook);
   sizeObserver?.observe(viewport);sizeBook();
   const maps=new Map();
+  // Keep each visited spread in place, as in Mession's book. A turn only changes
+  // the visible faces; it must not rebuild the map or replace the paper at landing.
+  const renderedViews=new Map([[current.id,stage.querySelector('.jp-view')]]);
   function mountMaps(root) { root.querySelectorAll('.jp-atlas').forEach(el=>{if(!maps.has(el))maps.set(el,mountAtlas(el,model.site,model.posts));}); }
   function clearMaps() { for(const cleanup of maps.values())if(typeof cleanup==='function')cleanup();maps.clear(); }
+  function viewNode(view) {
+    let node=renderedViews.get(view.id);
+    if(!node) {
+      node=document.createElement('div');node.className=`jp-view view-${view.kind}`;
+      node.inert=true;node.setAttribute('aria-hidden','true');node.innerHTML=renderView(view);
+      stage.append(node);renderedViews.set(view.id,node);mountMaps(node);
+    }
+    return node;
+  }
+  function snapshot(node) {
+    const clone=node.cloneNode(true),suffix=`-turn-${++markId}`,ids=new Map();
+    clone.querySelectorAll('[id]').forEach(el=>{ids.set(el.id,`${el.id}${suffix}`);el.id+=suffix;});
+    // Snapshot filters have their own IDs, so removing a turning face can never
+    // invalidate the real cover's foil mask or a map's SVG definitions.
+    clone.querySelectorAll('*').forEach(el=>{for(const attribute of [...el.attributes]) {
+      let value=attribute.value;
+      for(const [id,replacement] of ids) {
+        value=value.replaceAll(`url(#${id})`,`url(#${replacement})`);
+        if(value===`#${id}`)value=`#${replacement}`;
+      }
+      if(value!==attribute.value)el.setAttribute(attribute.name,value);
+    }});
+    return clone.innerHTML;
+  }
   function updateChrome() {
     reader.querySelector('.jp-chapters').outerHTML=controls(views,current);
     reader.querySelector('.jp-pagination').innerHTML=pagination(views,current);
     if(turn)reader.querySelectorAll('.jp-chapters button,.jp-pagination button').forEach(b=>b.disabled=true);
   }
   function resting() {
-    clearMaps();stage.innerHTML=`<div class="jp-view is-active view-${current.kind}">${renderView(current)}</div>`;
+    stage.querySelector('.jp-turning-leaf')?.remove();viewNode(current);
+    for(const [id,node] of renderedViews) {
+      const active=id===current.id,view=views.find(item=>item.id===id);
+      node.className=`jp-view ${active?'is-active ':''}view-${view.kind}`;
+      node.inert=!active;node.setAttribute('aria-hidden',String(!active));
+    }
     stage.className=`jp-stage ${current.kind==='cover'?'is-front-closed':current.kind==='back'?'is-back-closed':''}`;
-    stage.setAttribute('aria-busy','false'); mountMaps(stage);updateChrome();
+    stage.setAttribute('aria-busy','false');updateChrome();
   }
-  function finish() { if(!turn||disposed)return;clearTimeout(timer);current=turn.to;currentId=current.leaves?.[0]||current.id;turn=null;resting(); }
+  function finish() { if(!turn||disposed)return;clearTimeout(timer);cancelAnimationFrame(frame);clearAnimationListener();current=turn.to;currentId=current.leaves?.[0]||current.id;turn=null;resting(); }
   async function go(target) {
     if(!target||target===current||turn||disposed)return;
     const focused=reader.contains(document.activeElement);
     if(motion.matches){current=target;currentId=current.leaves?.[0]||current.id;resting();if(focused)stage.focus({preventScroll:true});return;}
     const direction=views.indexOf(target)>views.indexOf(current)?'next':'prev';
-    const old=stage.querySelector('.jp-view').innerHTML;
-    let next=renderView(target);
-    const pending=turn={from:current,to:target,direction};clearMaps();updateChrome();
+    const outgoing=viewNode(current),incoming=viewNode(target);
+    const pending=turn={from:current,to:target,direction};updateChrome();
     stage.setAttribute('aria-busy','true');
+    outgoing.inert=true;
     if(target.kind==='map') {
-      // Prepare a real map before taking the two read-only turning-page snapshots.
-      // Keeping it in layout also gives its labels the correct rendered scale.
-      const prepared=document.createElement('div');
-      prepared.className='jp-view view-map';prepared.style.visibility='hidden';prepared.inert=true;prepared.setAttribute('aria-hidden','true');prepared.innerHTML=next;
-      stage.querySelector('.is-active')?.setAttribute('inert','');stage.append(prepared);mountMaps(prepared);
-      await maps.get(prepared.querySelector('.jp-atlas'))?.ready;
+      // The first map turn waits for a complete real spread; later turns reuse it.
+      await maps.get(incoming.querySelector('.jp-atlas'))?.ready;
       if(disposed||turn!==pending)return;
-      next=prepared.innerHTML;clearMaps();
     }
-    stage.className=`jp-stage is-turning ${target.kind==='cover'?'is-front-closed':target.kind==='back'?'is-back-closed':''}`;
-    stage.setAttribute('aria-busy','true');
-    const paperTurn=![current.kind,target.kind].some(kind=>kind==='cover'||kind==='back');
-    stage.innerHTML=`<div class="jp-view is-outgoing outgoing-${direction} view-${current.kind}" inert aria-hidden="true">${old}</div><div class="jp-view is-incoming incoming-${direction} view-${target.kind}" inert aria-hidden="true">${next}</div>${media.matches?'':`<div class="jp-turning-leaf turn-${direction} ${paperTurn?'is-paper-turn':''}" aria-hidden="true" inert><div class="jp-turn-face jp-turn-front face-${direction==='next'?'right':'left'} face-${current.kind==='cover'||current.kind==='back'?'cover':'paper'}"><div class="jp-turn-content">${old}</div></div><div class="jp-turn-face jp-turn-back face-${direction==='next'?'left':'right'} face-${target.kind==='cover'||target.kind==='back'?'cover':'paper'}"><div class="jp-turn-content">${next}</div></div></div>`}`;
-    mountMaps(stage.querySelector('.is-incoming'));
-    const animated=stage.querySelector(media.matches?'.is-outgoing':'.jp-turning-leaf');
-    const animationEnd=e=>{if(e.target!==animated||e.pseudoElement)return;animated.removeEventListener('animationend',animationEnd);finish();};
-    animated.addEventListener('animationend',animationEnd);
-    timer=setTimeout(finish,850);
+    const old=snapshot(outgoing),next=snapshot(incoming);
+    if(!media.matches)stage.insertAdjacentHTML('beforeend',`<div class="jp-turning-leaf turn-${direction}" aria-hidden="true" inert><div class="jp-turn-face jp-turn-front face-${direction==='next'?'right':'left'} face-${current.kind==='cover'||current.kind==='back'?'cover':'paper'}"><div class="jp-turn-content">${old}</div></div><div class="jp-turn-face jp-turn-back face-${direction==='next'?'left':'right'} face-${target.kind==='cover'||target.kind==='back'?'cover':'paper'}"><div class="jp-turn-content">${next}</div></div></div>`);
+    // Commit the real starting position first. One shared progress curve drives
+    // the cover's centering and its spine rotation without a mid-turn speed jump.
+    frame=requestAnimationFrame(()=>{
+      if(disposed||turn!==pending)return;
+      stage.className=`jp-stage is-turning ${target.kind==='cover'?'is-front-closed':target.kind==='back'?'is-back-closed':''}`;
+      outgoing.className=`jp-view is-outgoing outgoing-${direction} view-${current.kind}`;
+      incoming.className=`jp-view is-incoming incoming-${direction} view-${target.kind}`;
+      outgoing.setAttribute('aria-hidden','true');incoming.setAttribute('aria-hidden','true');
+      const animated=media.matches?outgoing:stage.querySelector('.jp-turning-leaf');
+      const animationEnd=e=>{if(e.target!==animated||e.pseudoElement)return;animated.removeEventListener('animationend',animationEnd);finish();};
+      animated.addEventListener('animationend',animationEnd);
+      clearAnimationListener=()=>animated.removeEventListener('animationend',animationEnd);
+      timer=setTimeout(finish,900);
+    });
     if(focused)stage.focus({preventScroll:true});
   }
   function click(e) {
@@ -162,11 +196,11 @@ export function syncPassport() {
   function up(e) {if(!start||e.pointerId!==start.pointer)return;const dx=e.clientX-start.x,dy=e.clientY-start.y;start=null;releaseSwipe(e.pointerId);if(Math.abs(dx)>45&&Math.abs(dx)>Math.abs(dy)*1.5)go(views[views.indexOf(current)+(dx<0?1:-1)]);}
   function cancel(e) {if(!start||e.pointerId!==start.pointer)return;start=null;releaseSwipe(e.pointerId);}
   function resize() {
-    if(turn)finish();views=passportViews(media.matches);current=resolveView(views,currentId);
+    if(turn)finish();clearMaps();renderedViews.clear();stage.replaceChildren();views=passportViews(media.matches);current=resolveView(views,currentId);
     reader.classList.toggle('is-compact',media.matches);reader.querySelector('.jp-hint').textContent=media.matches?'左右轻扫翻页 · 地图可单独拖动浏览':'左右箭头翻阅 · 在地图上慢慢探索世界';sizeBook();resting();
   }
   reader.addEventListener('click',click);reader.addEventListener('keydown',key);
   viewport.addEventListener('pointerdown',down);viewport.addEventListener('pointerup',up);viewport.addEventListener('pointercancel',cancel);viewport.addEventListener('lostpointercapture',cancel);
   media.addEventListener('change',resize);mountMaps(stage);
-  disposeReader=()=>{disposed=true;clearTimeout(timer);clearMaps();sizeObserver?.disconnect();if(start){const pointer=start.pointer;start=null;releaseSwipe(pointer);}reader.removeEventListener('click',click);reader.removeEventListener('keydown',key);viewport.removeEventListener('pointerdown',down);viewport.removeEventListener('pointerup',up);viewport.removeEventListener('pointercancel',cancel);viewport.removeEventListener('lostpointercapture',cancel);media.removeEventListener('change',resize);};
+  disposeReader=()=>{disposed=true;clearTimeout(timer);cancelAnimationFrame(frame);clearAnimationListener();clearMaps();renderedViews.clear();sizeObserver?.disconnect();if(start){const pointer=start.pointer;start=null;releaseSwipe(pointer);}reader.removeEventListener('click',click);reader.removeEventListener('keydown',key);viewport.removeEventListener('pointerdown',down);viewport.removeEventListener('pointerup',up);viewport.removeEventListener('pointercancel',cancel);viewport.removeEventListener('lostpointercapture',cancel);media.removeEventListener('change',resize);};
 }

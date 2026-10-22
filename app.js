@@ -241,8 +241,9 @@ async function init() {
     document.querySelectorAll('[data-english-name]').forEach(el=>el.textContent=site.englishName);
     $('#year').textContent=String(new Date().getFullYear());
     mountWidgets({site,posts});
-    mountScene();
+    mountScene({gallery:site.heroGallery});
     render();
+    document.dispatchEvent(new Event('slow-app-ready'));
   } catch(error) {
     $('#main').innerHTML='<div class="empty-state page-empty"><h1>手记还没翻开。</h1><p>暂时没能读取内容，请刷新页面再试一次。</p><button class="button primary" id="retry">重新打开</button></div>';
     $('#retry').addEventListener('click',init);

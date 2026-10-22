@@ -17,9 +17,12 @@ const ART = {
 };
 // Only complete, matching landscape/portrait pairs enter the random cover pool.
 const COVER_ART = [ART.summer, ART.autumn, ART.winter];
+let coverArt = COVER_ART;
+let mobileArt = COVER_ART.map(art => ({...art,src:art.mobile,aspectRatio:1080/2119}));
 const PREVIOUS_COVER = 'slow-notes-previous-cover';
+const PREVIOUS_MOBILE_COVER = 'slow-notes-previous-mobile-cover';
 const heroCovers = new WeakMap();
-let previousCover;
+let previousCover, previousMobileCover;
 let mounted = false, observer, timer, lastSignature = '';
 const finite = Number.isFinite;
 const rad = value => value * Math.PI / 180;
@@ -28,9 +31,26 @@ const validCity = city => city && finite(city.latitude) && Math.abs(city.latitud
 const cityKey = city => `${city.latitude.toFixed(4)},${city.longitude.toFixed(4)}`;
 
 /** Uniform choice among the other scenes; refreshes remember the previous cover. */
-export function chooseCoverArt(previousKey, random = Math.random) {
-  const choices = COVER_ART.filter(art => art.key !== previousKey);
+export function chooseCoverArt(previousKey, random = Math.random, pool = COVER_ART) {
+  const alternatives = pool.filter(art => art.key !== previousKey);
+  const choices = alternatives.length ? alternatives : pool;
   return choices[Math.floor(random() * choices.length)];
+}
+
+/** Accept local image paths only; the gallery is bundled into site.json at build time. */
+export function normalizeCoverGallery(gallery) {
+  const normalize = items => {
+    const keys = new Set();
+    return (Array.isArray(items)?items:[]).filter(art => {
+      if(!art || art.enabled===false || typeof art.key!=='string' || !/^[a-z0-9_-]{1,90}$/.test(art.key) || keys.has(art.key)) return false;
+      if(typeof art.src!=='string' || !/^\.\/assets\/(hero-gallery|hero-v3)\/[a-zA-Z0-9._-]+\.(jpg|jpeg|png|webp)$/.test(art.src)) return false;
+      keys.add(art.key);return true;
+    }).map(art => ({key:art.key,src:art.src,title:typeof art.title==='string'?art.title:'JOGUMAN 官方插画',
+      source:typeof art.source==='string'?art.source:'JOGUMAN Downloads',
+      aspectRatio:Number.isFinite(art.aspectRatio)&&art.aspectRatio>.3&&art.aspectRatio<3?art.aspectRatio:undefined,
+      skyColor:typeof art.skyColor==='string'&&/^#[0-9a-f]{6}$/i.test(art.skyColor)?art.skyColor:undefined}));
+  };
+  return {artworks:normalize(gallery?.artworks),mobileArtworks:normalize(gallery?.mobileArtworks)};
 }
 
 function coverFor(hero, state, context) {
@@ -41,9 +61,15 @@ function coverFor(hero, state, context) {
   if(previousCover === undefined) {
     try {previousCover = sessionStorage.getItem(PREVIOUS_COVER);} catch {previousCover = null;}
   }
-  const art = chooseCoverArt(previousCover);
-  previousCover = art.key;
-  try {sessionStorage.setItem(PREVIOUS_COVER, art.key);} catch { /* In-memory fallback. */ }
+  if(previousMobileCover === undefined) {
+    try {previousMobileCover = sessionStorage.getItem(PREVIOUS_MOBILE_COVER);} catch {previousMobileCover = null;}
+  }
+  const desktop = chooseCoverArt(previousCover,Math.random,coverArt);
+  const mobile = chooseCoverArt(previousMobileCover,Math.random,mobileArt);
+  const art = {...desktop,mobile:mobile.src,mobileKey:mobile.key,mobileTitle:mobile.title,
+    mobileAspectRatio:mobile.aspectRatio,mobileSkyColor:mobile.skyColor};
+  previousCover = desktop.key;previousMobileCover = mobile.key;
+  try {sessionStorage.setItem(PREVIOUS_COVER,desktop.key);sessionStorage.setItem(PREVIOUS_MOBILE_COVER,mobile.key);} catch { /* In-memory fallback. */ }
   heroCovers.set(hero, {signature, art});
   return art;
 }
@@ -156,7 +182,7 @@ export function syncScene() {
   if(!hero) return state;
   ensureLayers(hero);
   state.art=coverFor(hero,state,context);
-  const signature=[state.season,state.phase,state.condition,state.actualCondition,state.weatherMode,state.city,state.phaseSource,state.art.key].join('|');
+  const signature=[state.season,state.phase,state.condition,state.actualCondition,state.weatherMode,state.city,state.phaseSource,state.art.key,state.art.mobileKey].join('|');
   if(lastSignature===signature && hero.dataset.sceneSignature===signature) return state;
   lastSignature=signature;hero.dataset.sceneSignature=signature;
   hero.dataset.sceneSeason=state.season;hero.dataset.scenePhase=state.phase;hero.dataset.sceneWeather=state.condition;
@@ -165,24 +191,40 @@ export function syncScene() {
   const description=hero.querySelector('.scene-description');
   description.textContent=`${state.city}，${state.label}。${state.weatherMode==='preview'?`天气效果为手动预览，实况为${WEATHER_NAMES[state.actualCondition]}。`:'天气效果跟随实况。'}${state.phaseSource==='manual-theme'?'日夜外观使用手动选择。':'日夜随所在地日照变化。'}背景使用 JOGUMAN 官方完整插画，雨雪与雾的动态效果由本站制作。`;
   hero.dataset.sceneArt=state.art.key;
+  hero.dataset.sceneMobileArt=state.art.mobileKey;
   root.dataset.sceneArt=state.art.key;
+  const defaultSky={hanok:'#a9d8ea',bbq:'#8dd2f3',snow:'#00577d'};
+  hero.style.setProperty('--scene-sky',state.art.skyColor||defaultSky[state.art.key]||'#bcd9d9');
+  hero.style.setProperty('--scene-mobile-sky',state.art.mobileSkyColor||defaultSky[state.art.mobileKey]||'#bcd9d9');
+  hero.style.setProperty('--scene-desktop-ratio',String(state.art.aspectRatio||16/9));
+  hero.style.setProperty('--scene-mobile-ratio',String(state.art.mobileAspectRatio||1080/2119));
   const picture=hero.querySelector('.hero-official');
   if(picture) {
     const img=picture.querySelector('img'), source=picture.querySelector('source');
     if(source.getAttribute('srcset')!==state.art.mobile) source.srcset=state.art.mobile;
     if(img.getAttribute('src')!==state.art.src) img.src=state.art.src;
-    img.alt='布拉吉奥和朋友们的日常，JOGUMAN 官方插画';
+    img.alt=`${matchMedia('(max-width:700px)').matches?state.art.mobileTitle||'布拉吉奥和朋友们':state.art.title||'布拉吉奥和朋友们'}，JOGUMAN 官方插画`;
   }
   document.dispatchEvent(new CustomEvent('slow-scene-change',{detail:state}));
   return state;
 }
 
-export function mountScene() {
+export function mountScene({gallery} = {}) {
+  if(gallery) {
+    const normalized=normalizeCoverGallery(gallery);
+    if(normalized.artworks.length) coverArt=normalized.artworks;
+    if(normalized.mobileArtworks.length) mobileArt=normalized.mobileArtworks;
+  }
   if(mounted) return syncScene();
   mounted=true;
   observer=new MutationObserver(()=>syncScene());
   observer.observe(document.documentElement,{attributes:true,attributeFilter:['data-time-of-day','data-weather-condition','data-weather-effect','data-theme','data-theme-mode']});
   document.addEventListener('slow-weather-effect-change',()=>syncScene());
+  document.addEventListener('click',event=>{
+    if(!event.target.closest('[data-scene-shuffle]'))return;
+    const hero=document.querySelector('.island-hero');
+    if(hero){heroCovers.delete(hero);syncScene();}
+  });
   window.addEventListener('hashchange',()=>requestAnimationFrame(()=>syncScene()));
   window.addEventListener('storage',event=>{if(!event.key || ['slow-notes-weather-city','slow-notes-weather-cache','slow-notes-weather-effect','slow-notes-theme'].includes(event.key)) syncScene();});
   document.addEventListener('visibilitychange',()=>{document.documentElement.dataset.scenePaused=String(document.hidden);if(!document.hidden) syncScene();});

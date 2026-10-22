@@ -1,5 +1,5 @@
 /* Complete official wallpaper scenes. Foreground weather never alters the character artwork. */
-.island-hero{height:clamp(680px,56.25vw,960px);background:#8dd2f3;color:#283b2b}
+.island-hero{height:clamp(680px,56.25vw,960px);background:var(--scene-sky,#8dd2f3);color:#283b2b}
 .island-hero:after{display:none}
 .hero-official{position:absolute;inset:0;display:block;pointer-events:none}
 .hero-official img{width:100%;height:100%;object-fit:cover;object-position:center;display:block}
@@ -9,9 +9,11 @@
 .island-hero-copy>p{font-size:15px;line-height:1.9;margin-top:18px}
 .island-primary{font-size:14px;padding:12px 24px;margin-top:25px;box-shadow:0 3px 0 #203d2926}
 .island-weather{top:109px;right:6%;padding:12px 18px;border-radius:18px}
-.hero-art-credit{position:absolute;right:28px;bottom:20px;z-index:6;font:7px/1.5 var(--body);letter-spacing:1.8px;opacity:.52}
-.island-hero[data-scene-art=hanok]{background:#a9d8ea}
-.island-hero[data-scene-art=snow]{background:#00577d;color:#fff7df}
+.hero-art-controls{position:absolute;right:28px;bottom:20px;z-index:6;display:flex;align-items:center;gap:14px}
+.hero-art-credit{font:7px/1.5 var(--body);letter-spacing:1.8px;opacity:.65}
+.scene-shuffle{display:inline-flex;align-items:center;gap:8px;border:1px solid #fff8;border-radius:20px;padding:8px 13px;background:#fff9e8e8;color:#2d4031;font:12px var(--body);cursor:pointer;box-shadow:0 2px 8px #172d2812}
+.scene-shuffle:hover{background:#fffdf5}
+.scene-shuffle:focus-visible{outline:2px solid #315f42;outline-offset:3px}
 :root .island-hero[data-scene-art=snow] .island-hero-copy h1 em{color:#e6dda6}
 :root body[data-page=home] .site-header:not(.scrolled){color:#283b2b}
 :root[data-scene-art=snow] body[data-page=home] .site-header:not(.scrolled){color:#fff7df}
@@ -22,14 +24,16 @@
 @media(min-width:1600px){.island-hero-copy{top:185px;left:8%}}
 @media(min-width:701px) and (max-width:1000px){.island-hero-copy{left:5%;top:170px}.island-hero-copy h1{font-size:40px}.island-hero-copy>p{font-size:13px}.island-weather{top:95px;right:4%}}
 @media(max-width:700px){
- .island-hero{height:max(780px,196.2vw)}
- .hero-official img{object-fit:cover;object-position:center bottom}
+ .island-hero{height:max(780px,calc(100vw / var(--scene-mobile-ratio,.5097)));background:var(--scene-mobile-sky,var(--scene-sky,#8dd2f3))}
+ .hero-official{top:auto;bottom:0;width:100%;height:auto;aspect-ratio:var(--scene-mobile-ratio,.5097)}
+ .hero-official img{object-fit:contain;object-position:center bottom}
  .island-hero-copy{left:7%;top:195px;max-width:86%}
  .island-hero-copy h1{font-size:38px;line-height:1.35;letter-spacing:2px}
  .island-hero-copy>p{font-size:12px;line-height:1.9;margin-top:14px}
  .island-primary{font-size:12px;padding:10px 19px;margin-top:16px}
  .island-weather{left:7%;right:7%;top:91px;gap:10px;padding:10px 13px;max-width:none}
- .hero-art-credit{right:15px;bottom:17px;font-size:5px}
+ .hero-art-controls{right:15px;bottom:90px;gap:7px;flex-direction:column;align-items:flex-end}
+ .hero-art-credit{font-size:5px}
 }
 .scene-effects{position:absolute;inset:0;z-index:4;pointer-events:none;overflow:hidden;border-radius:inherit}
 .scene-effects>div{position:absolute;inset:0;pointer-events:none;opacity:0;transition:opacity 1s}
@@ -60,8 +64,8 @@
 
 /* Give the complete landscape its own sky above, without moving its characters. */
 @media(min-width:701px){
- .island-hero{height:max(680px,calc(56.25vw + 100px))}
- .hero-official{top:auto;bottom:0;height:auto;width:100%;aspect-ratio:16/9}
+ .island-hero{height:max(680px,calc(100vw / var(--scene-desktop-ratio,1.7778) + 100px))}
+ .hero-official{top:auto;bottom:0;height:auto;width:100%;aspect-ratio:var(--scene-desktop-ratio,1.7778)}
  .hero-official img{object-fit:contain}
  .island-hero-copy{left:0;top:115px;width:100%;max-width:none;text-align:center;padding:0 24px}
  .island-hero-copy h1{font-size:clamp(34px,3.8vw,54px);line-height:1.4;letter-spacing:2px}

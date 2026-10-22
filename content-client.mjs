@@ -16,11 +16,15 @@ export function catalogPosts(catalog, site) {
   return posts.sort((a, b) => b.date.localeCompare(a.date) || a.slug.localeCompare(b.slug));
 }
 
-export async function loadContent(fetcher = fetch) {
+export async function loadContent(fetcher = fetch, { timeoutMs = 12000 } = {}) {
   const read = async (url) => {
-    const response = await fetcher(url, { cache: 'no-store', credentials: 'same-origin' });
-    if (!response.ok) throw new Error(`无法读取博客内容（${response.status}）`);
-    return response.json();
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), timeoutMs);
+    try {
+      const response = await fetcher(url, { cache: 'no-store', credentials: 'same-origin', signal: controller.signal });
+      if (!response.ok) throw new Error(`无法读取博客内容（${response.status}）`);
+      return await response.json();
+    } finally { clearTimeout(timer); }
   };
   const site = await read('./data/site.json');
   // Runtime failures must never fall back to compiled articles: that could

@@ -31,6 +31,17 @@ export async function build(options = {}) {
     catch (error) { if (error.code !== 'ENOENT') throw error; }
   }
   const site = JSON.parse(await readFile(path.join(root, 'content', 'site.json'), 'utf8'));
+  try {
+    site.heroGallery=JSON.parse(await readFile(path.join(root,'public','data','hero-gallery.json'),'utf8'));
+    for(const art of [...(site.heroGallery.artworks||[]),...(site.heroGallery.mobileArtworks||[])]) {
+      if(typeof art.src!=='string'||!/^\.\/assets\/(hero-gallery|hero-v3)\/[a-zA-Z0-9._-]+\.(jpg|jpeg|png|webp)$/.test(art.src)) throw new Error('官方图库包含无效图片路径');
+      await access(path.join(root,'public',art.src));
+    }
+  } catch(error) {
+    if(error.code!=='ENOENT') throw error;
+    // Older/local workspaces without the optional manifest retain the built-in covers.
+    if(site.heroGallery) throw new Error('官方图库图片缺失，请重新同步图库');
+  }
   site.contentMode = mode;
   if (options.url !== undefined) site.url = options.url;
   for (const key of ['name', 'englishName', 'author', 'description', 'bio', 'currentNote', 'location']) {

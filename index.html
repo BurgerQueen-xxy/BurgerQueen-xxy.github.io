@@ -16,7 +16,7 @@
   <link rel="stylesheet" href="./modules/atlas.css">
   <link rel="stylesheet" href="./modules/widgets.css">
   <script src="./theme.js"></script>
-  <script src="./app.js" type="module"></script>
+  <script src="./app.js" type="module" id="app-entry"></script>
 </head>
 <body>
   <a class="skip-link" href="#main">跳到内容</a>
@@ -41,7 +41,22 @@
     </div>
   </header>
   <aside class="mobile-menu" id="mobile-menu" aria-label="更多栏目" hidden><h2>到处逛逛</h2><button class="icon-button mobile-menu-close" id="mobile-menu-close" aria-label="关闭更多栏目">×</button><div class="mobile-menu-links" id="mobile-menu-links"></div></aside>
-  <main id="main" class="wrap" tabindex="-1"><div class="loading-state">正在翻开手记<span>…</span></div></main>
+  <main id="main" class="wrap" tabindex="-1"><div class="loading-state" style="flex-direction:column;gap:18px;text-align:center"><span>正在翻开手记…</span><div id="loading-recovery" hidden><p style="font-size:15px;margin-bottom:16px">连接有点慢，部分页面内容还没加载完成。</p><button class="button primary" id="loading-retry" type="button">重新加载</button></div></div></main>
+  <script>
+    // This small recovery UI also works when a module download fails to start.
+    (() => {
+      const showRecovery = () => {
+        const notice = document.getElementById('loading-recovery');
+        if (notice) notice.hidden = false;
+      };
+      const timer = setTimeout(showRecovery, 15000);
+      document.getElementById('loading-retry').addEventListener('click', () => location.reload());
+      window.addEventListener('error', event => {
+        if (event.target?.id === 'app-entry' || event.error) showRecovery();
+      }, true);
+      document.addEventListener('slow-app-ready', () => clearTimeout(timer), { once: true });
+    })();
+  </script>
   <footer class="site-footer wrap">
     <div><span class="footer-motto">慢慢记录，好好生活。</span><span>© <span id="year">2026</span> <span data-site-name>慢慢来</span></span></div>
     <p>个人博客 · 非官方主题 <span>角色 © <a href="https://www.joguman.com/" target="_blank" rel="noopener noreferrer">JOGUMAN</a></span></p>
