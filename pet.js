@@ -1,6 +1,7 @@
 // Official standing JOGUMAN artwork; see public/assets/pet-v4/SOURCES.md.
+import { createBrachioRig, PET_ART } from './modules/pet-rig.js';
 const STORAGE_KEY = 'slow-notes-pet';
-const stillUrl = new URL('./assets/brachio.png', import.meta.url).href;
+const stillUrl = new URL('./assets/pet-v4/brachio-front.svg', import.meta.url).href;
 const doorFrameUrl = new URL('./assets/pet-v4/door-frame.svg', import.meta.url).href;
 const doorPanelUrl = new URL('./assets/pet-v4/door-panel.svg', import.meta.url).href;
 const DOOR_DURATION = 1680;
@@ -8,23 +9,6 @@ const OBSTACLES = '.site-header, .site-header .main-nav, #mobile-menu, .mobile-d
 const clamp = (number, min, max) => Math.min(max, Math.max(min, number));
 const finite = value => typeof value === 'number' && Number.isFinite(value);
 let mountedPet;
-
-/** A small 2D head rig: source pixels move together; feet and arms stay planted. */
-export function headPose(x, y) {
-  const turn = clamp(x, -1, 1), nod = clamp(y, -1, 1);
-  const angle = clamp(turn * 6 - nod * 12, -15, 15);
-  const dx = turn * 8, dy = nod * 3;
-  const radians = angle * Math.PI / 180, cos = Math.cos(radians), sin = Math.sin(radians);
-  const point = (px, py) => ({x:100 + dx + (px-100)*cos - (py-108)*sin, y:108 + dy + (px-100)*sin + (py-108)*cos});
-  const left = point(67, 100), right = point(138, 100);
-  const leftTangent = point(65.8, 110), rightTangent = point(136.8, 110);
-  const pair = p => `${p.x.toFixed(3)} ${p.y.toFixed(3)}`;
-  return {
-    transform:`translate(${dx.toFixed(3)} ${dy.toFixed(3)}) rotate(${angle.toFixed(3)} 100 108)`,
-    // Overlap the cropped head and body so antialiasing cannot open a neck seam.
-    neck:`M ${pair(left)} L ${pair(right)} C ${pair(rightTangent)} 136.5 119 135.5 129 L 63.5 129 C 64.5 119 ${pair(leftTangent)} ${pair(left)} Z`,
-  };
-}
 
 /** Pixel coordinates are kept inside the visible, unobstructed viewport. */
 export function constrainPetPosition(point, bounds) {
@@ -64,7 +48,7 @@ export function mountPet({ trigger = '#pet-toggle' } = {}) {
   const controller = new AbortController(), options = { signal: controller.signal };
   let destroyed = false, greetingTimer, transitionTimer, transitionState = null, layoutFrame, gazeFrame;
   let greetingIndex = 0, drag = null, suppressClickUntil = 0, position = {x:0,y:0}, bounds, obstructed = false, readingHidden = false;
-  let eyeGroups = [], headGroup, neckBridge, gaze = {x:0,y:0}, gazeTarget = {x:0,y:0}, gazeTime = 0;
+  let rig, gaze = {x:0,y:0}, eyes = {x:0,y:0}, gazeTarget = {x:0,y:0}, gazeTime = 0;
   const greetings = ['嗨，我是布拉吉奥。', '别着急，慢慢来就好。', '一起发一会儿呆吧。'];
   const root = document.createElement('aside');
   root.className = 'brachio-pet'; root.id = 'brachio-pet'; root.setAttribute('aria-label', '布拉吉奥小伙伴');
@@ -80,21 +64,8 @@ export function mountPet({ trigger = '#pet-toggle' } = {}) {
       </div>
       <button type="button" class="brachio-pet__character" aria-label="布拉吉奥，拖动或打个招呼" aria-describedby="brachio-pet-help" aria-keyshortcuts="ArrowUp ArrowDown ArrowLeft ArrowRight Home Escape" title="拖动我，或点一下打招呼">
         <span class="brachio-pet__passage"><span class="brachio-pet__walker"><span class="brachio-pet__artwork" aria-hidden="true">
-          <img class="brachio-pet__still" src="${stillUrl}" alt="" width="186" height="360" draggable="false">
-          <svg class="brachio-pet__standing" viewBox="0 0 186 360" preserveAspectRatio="xMidYMax meet" focusable="false" xmlns="http://www.w3.org/2000/svg">
-            <defs>
-              <clipPath id="brachio-pet-eye-crop"><rect x="64" y="33" width="12" height="12"/></clipPath>
-              <clipPath id="brachio-pet-head-crop"><rect width="186" height="108"/></clipPath>
-              <clipPath id="brachio-pet-body-crop"><rect y="126" width="186" height="234"/></clipPath>
-            </defs>
-            <path data-pet-neck fill="#27b67c"/>
-            <image href="${stillUrl}" width="186" height="360" clip-path="url(#brachio-pet-body-crop)"/>
-            <g data-pet-head>
-              <image href="${stillUrl}" width="186" height="360" clip-path="url(#brachio-pet-head-crop)"/>
-              <rect x="64" y="33" width="12" height="12" fill="#27b67c"/>
-              <g data-pet-gaze><g clip-path="url(#brachio-pet-eye-crop)"><image href="${stillUrl}" width="186" height="360"/></g></g>
-            </g>
-          </svg>
+          <img class="brachio-pet__still" src="${stillUrl}" alt="" width="156" height="306" draggable="false">
+          <svg class="brachio-pet__standing" aria-hidden="true"></svg>
         </span></span></span>
       </button>
     </div>`;
@@ -168,26 +139,24 @@ export function mountPet({ trigger = '#pet-toggle' } = {}) {
     preferences.position=normalizePetPosition(position,bounds);save();resetGaze();sync();
   }
   function applyGaze() {
-    const pose = headPose(gaze.x, gaze.y);
-    headGroup?.setAttribute('transform',pose.transform);
-    neckBridge?.setAttribute('d',pose.neck);
-    eyeGroups.forEach(group=>group.setAttribute('transform',`translate(${(gaze.x*4).toFixed(3)} ${(gaze.y*3).toFixed(3)})`));
+    rig?.lookAt(gaze.x,gaze.y,eyes.x,eyes.y);
   }
-  function resetGaze() {cancelAnimationFrame(gazeFrame);gazeFrame=null;gazeTime=0;gaze={x:0,y:0};gazeTarget={x:0,y:0};applyGaze();}
+  function resetGaze() {cancelAnimationFrame(gazeFrame);gazeFrame=null;gazeTime=0;gaze={x:0,y:0};eyes={x:0,y:0};gazeTarget={x:0,y:0};applyGaze();}
   function scheduleGaze() {if(!gazeFrame){gazeTime=performance.now();gazeFrame=requestAnimationFrame(stepGaze);}}
   function stepGaze(time) {
     gazeFrame=null;
     if(!motionAllowed() || preferences.hidden || obstructed || drag || transitionState) {resetGaze();return;}
-    const ease=1-Math.exp(-Math.min(64,Math.max(1,time-gazeTime))/110);gazeTime=time;
+    const delta=Math.min(64,Math.max(1,time-gazeTime)), ease=1-Math.exp(-delta/125), eyeEase=1-Math.exp(-delta/55);gazeTime=time;
     gaze.x+=(gazeTarget.x-gaze.x)*ease;gaze.y+=(gazeTarget.y-gaze.y)*ease;
-    if(Math.abs(gazeTarget.x-gaze.x)+Math.abs(gazeTarget.y-gaze.y)>.001) gazeFrame=requestAnimationFrame(stepGaze);
-    else gaze={...gazeTarget};
+    eyes.x+=(gazeTarget.x-eyes.x)*eyeEase;eyes.y+=(gazeTarget.y-eyes.y)*eyeEase;
+    if(Math.abs(gazeTarget.x-gaze.x)+Math.abs(gazeTarget.y-gaze.y)+Math.abs(gazeTarget.x-eyes.x)+Math.abs(gazeTarget.y-eyes.y)>.001) gazeFrame=requestAnimationFrame(stepGaze);
+    else {gaze={...gazeTarget};eyes={...gazeTarget};}
     applyGaze();
   }
   function lookAt(event) {
-    if(!eyeGroups.length || event.pointerType==='touch' || !motionAllowed() || preferences.hidden || obstructed || drag || transitionState) return;
-    const rect=artwork.getBoundingClientRect(), scale=Math.min(rect.width/186,rect.height/360);
-    const eyeX=rect.left+(rect.width-186*scale)/2+70*scale, eyeY=rect.bottom-360*scale+39*scale;
+    if(!rig || event.pointerType==='touch' || !motionAllowed() || preferences.hidden || obstructed || drag || transitionState) return;
+    const rect=artwork.getBoundingClientRect(), scale=Math.min(rect.width/PET_ART.width,rect.height/PET_ART.height);
+    const eyeX=rect.left+(rect.width-PET_ART.width*scale)/2+PET_ART.eyeX*scale, eyeY=rect.bottom-PET_ART.height*scale+PET_ART.eyeY*scale;
     const view=viewport(), dx=event.clientX-eyeX, dy=event.clientY-eyeY;
     // Soft limits continue responding across the screen instead of saturating.
     gazeTarget={x:dx/Math.hypot(dx,Math.max(100,view.width*.26)),y:dy/Math.hypot(dy,Math.max(100,view.height*.3))};
@@ -197,12 +166,6 @@ export function mountPet({ trigger = '#pet-toggle' } = {}) {
     gazeTarget={x:0,y:0};
     if(motionAllowed()&&!preferences.hidden&&!obstructed&&!drag&&!transitionState) scheduleGaze();
     else resetGaze();
-  }
-  function connectEyes() {
-    // Reuse the original PNG's eye pixels instead of drawing a replacement eye.
-    eyeGroups=[...artwork.querySelectorAll('[data-pet-gaze]')];
-    headGroup=artwork.querySelector('[data-pet-head]');neckBridge=artwork.querySelector('[data-pet-neck]');
-    root.dataset.gazeReady=String(eyeGroups.length===1&&Boolean(headGroup)&&Boolean(neckBridge));resetGaze();
   }
   function sync() {
     const paused=preferences.paused||media.matches;
@@ -347,9 +310,21 @@ export function mountPet({ trigger = '#pet-toggle' } = {}) {
     }
   },options);
   root.hidden=preferences.hidden;updateLayout();sync();
-  connectEyes();
-  const originalImage=root.querySelector('.brachio-pet__still');
-  const ready=originalImage.decode().then(()=>{if(destroyed)return;root.classList.add('brachio-pet--ready');sync();}).catch(()=>{if(!destroyed)root.classList.remove('brachio-pet--ready');});
+  // Load the same local vector used by the static fallback, then attach its rig.
+  const ready=fetch(stillUrl,{signal:controller.signal}).then(response=>{
+    if(!response.ok) throw new Error('Brachio artwork unavailable');
+    return response.text();
+  }).then(source=>{
+    if(destroyed) return;
+    const parsed=new DOMParser().parseFromString(source,'image/svg+xml');
+    if(parsed.querySelector('parsererror')) throw new Error('Invalid Brachio artwork');
+    const svg=document.importNode(parsed.documentElement,true);
+    svg.setAttribute('class','brachio-pet__standing');svg.setAttribute('preserveAspectRatio','xMidYMax meet');
+    svg.setAttribute('aria-hidden','true');svg.setAttribute('focusable','false');
+    const nextRig=createBrachioRig(svg);
+    artwork.querySelector('.brachio-pet__standing').replaceWith(svg);rig=nextRig;
+    root.dataset.gazeReady='true';resetGaze();root.classList.add('brachio-pet--ready');sync();
+  }).catch(()=>{if(!destroyed){root.dataset.gazeReady='false';root.classList.remove('brachio-pet--ready');}});
   mountedPet={ready,show:()=>setHidden(false),hide:()=>setHidden(true,true),toggle:()=>setHidden(!preferences.hidden,true),pause:()=>setPaused(true),play:()=>setPaused(false),greet,resetPosition,moveBy,setReadingHidden,
     get interacting(){return Boolean(drag||transitionState);},
     destroy(){destroyed=true;controller.abort();clearTimeout(greetingTimer);clearTransition();cancelAnimationFrame(layoutFrame);resetGaze();finishDrag(false);resizeObserver?.disconnect();mutationObserver.disconnect();root.remove();triggerButton?.removeAttribute('aria-controls');triggerButton?.removeAttribute('aria-pressed');mountedPet=undefined;},

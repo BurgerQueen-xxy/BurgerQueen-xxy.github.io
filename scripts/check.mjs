@@ -5,10 +5,12 @@ import { access } from 'node:fs/promises';
 import { root, build, validatePostContent } from './build.mjs';
 import { renderMarkdown } from './markdown.mjs';
 
-for (const filename of ['public/modules/island.js', 'public/modules/widgets.js', 'public/modules/passport.js', 'public/modules/atlas.js', 'public/modules/scene.js', 'public/modules/reading.js', 'app.js', 'theme.js', 'pet.js', 'content-client.mjs', 'scripts/markdown.mjs', 'scripts/build.mjs', 'scripts/build-router.mjs', 'scripts/server.mjs', 'scripts/check.mjs', 'scripts/check-runtime.mjs']) {
+for (const filename of ['public/modules/island.js', 'public/modules/widgets.js', 'public/modules/passport.js', 'public/modules/atlas.js', 'public/modules/scene.js', 'public/modules/reading.js', 'public/modules/pet-rig.js', 'app.js', 'theme.js', 'pet.js', 'content-client.mjs', 'scripts/markdown.mjs', 'scripts/build.mjs', 'scripts/build-router.mjs', 'scripts/server.mjs', 'scripts/check.mjs', 'scripts/check-runtime.mjs', 'scripts/check-pet-rig.mjs']) {
   const result = spawnSync(process.execPath, ['--check', path.join(root, filename)], { stdio: 'inherit' });
   if (result.status !== 0) process.exit(result.status || 1);
 }
+const rigCheck = spawnSync(process.execPath, [path.join(root, 'scripts/check-pet-rig.mjs')], { stdio: 'inherit' });
+if (rigCheck.status !== 0) process.exit(rigCheck.status || 1);
 const renderedUnsafe = renderMarkdown('<script>alert(1)</script>\n\n[x](javascript:alert)\n\n[x](data:text/html,test)');
 assert(!renderedUnsafe.includes('<script'), '原始 HTML 应被转义');
 assert(!renderedUnsafe.includes('<a '), '脚本与 data 链接不应渲染为可点击链接');
