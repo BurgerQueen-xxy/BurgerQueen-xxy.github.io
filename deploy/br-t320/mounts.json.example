@@ -1,8 +1,0 @@
-{
-  "schema": 1,
-  "site": "slow-notes",
-  "mounts": [
-    {"path": "/mnt/mmcblk0p6", "uuid": "REPLACE_WITH_VERIFIED_TF_UUID", "fs": "ext4", "root": "/", "minimumFree": 536870912},
-    {"path": "/mnt/disks/disk1", "uuid": "REPLACE_WITH_VERIFIED_NAS_UUID", "fs": "ntfs3", "root": "/", "minimumFree": 2147483648}
-  ]
-}

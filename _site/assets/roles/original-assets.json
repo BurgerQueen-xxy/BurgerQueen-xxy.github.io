@@ -1,0 +1,22 @@
+{
+  "ankylo-chef-official.jpg": {
+    "bytes": 1694715,
+    "sha256": "549076a1435129f02227b2e3f8cbc1c56232a8b37d295bd4fa476640210c240f"
+  },
+  "bbq-party-official.jpg": {
+    "bytes": 225546,
+    "sha256": "1c9e86c851c10a6612c982793f7ad5651bd27e3f09655eaaab895798729f1bbd"
+  },
+  "diplo-beer-official.svg": {
+    "bytes": 75788,
+    "sha256": "08ea493ab5d3ac0291778cc2f13b9adc07374cedc0a9b4eed8ba9bc7b0857b78"
+  },
+  "diplo-beer-wallpaper-official.jpg": {
+    "bytes": 55267,
+    "sha256": "0191c83fe6c35fa6d804760973d18cab2b0a26a15aaaec909fb511141eff62ca"
+  },
+  "stego-official.svg": {
+    "bytes": 41391,
+    "sha256": "80f04751c2804bfbcc5ba36b6cc9b911c2afc5c576a5275cec7d96958f76b7fa"
+  }
+}

@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#faf8f0">
+  <meta name="description" content="慢慢来，一个关于日常、灵感、旅行和成长的个人博客。和布拉吉奥一起，记录小小的生活。">
+  <title>慢慢来 · 生活手记</title>
+  <link rel="icon" href="./assets/ubhc-transparent.png" type="image/png">
+  <link rel="apple-touch-icon" href="./assets/ubhc-transparent.png">
+  <link rel="preload" href="./assets/fonts/xiaolai-common.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="stylesheet" href="./assets/fonts/xiaolai.css">
+  <link rel="stylesheet" href="./styles.css">
+  <link rel="stylesheet" href="./pet.css">
+  <link rel="stylesheet" href="./modules/island.css">
+  <link rel="stylesheet" href="./modules/scene.css">
+  <link rel="stylesheet" href="./modules/passport.css">
+  <link rel="stylesheet" href="./modules/atlas.css">
+  <link rel="stylesheet" href="./modules/widgets.css">
+  <script src="./theme.js"></script>
+  <script src="./app.js" type="module" id="app-entry"></script>
+</head>
+<body>
+  <a class="skip-link" href="#main">跳到内容</a>
+  <div class="reading-progress" id="reading-progress"></div>
+  <header class="site-header wrap">
+    <a class="brand" href="#/" aria-label="慢慢来 首页">
+      <img class="brand-ubhc" src="./assets/ubhc-transparent.png" alt="UBHC" width="70" height="50">
+      <span><strong data-site-name>慢慢来</strong><small data-english-name>SLOW NOTES</small></span>
+    </a>
+    <nav class="main-nav" aria-label="主导航">
+      <a href="#/" data-nav="home">首页</a>
+      <a href="#/journal" data-nav="journal">手记</a>
+      <a href="#/little-things" data-nav="little-things">生活小事</a>
+      <a href="#/about" data-nav="about">关于我</a>
+    </nav>
+    <div class="header-actions">
+      <button class="icon-button" id="weather-toggle" aria-label="天气与时间" title="天气与时间"></button>
+      <button class="icon-button" id="search-toggle" aria-label="搜索文章" title="搜索文章（Ctrl K）"></button>
+      <button class="icon-button" id="music-toggle" aria-label="打开音乐播放器" title="慢慢电台"></button>
+      <button class="icon-button" id="theme-toggle" aria-label="切换到夜间模式" title="切换到夜间模式"></button>
+      <button class="icon-button pet-toggle" id="pet-toggle" aria-label="显示或收起布拉吉奥" title="显示或收起布拉吉奥"><img src="./assets/brachio.png" alt="" width="15" height="28"></button>
+    </div>
+  </header>
+  <aside class="mobile-menu" id="mobile-menu" aria-label="更多栏目" hidden><h2>到处逛逛</h2><button class="icon-button mobile-menu-close" id="mobile-menu-close" aria-label="关闭更多栏目">×</button><div class="mobile-menu-links" id="mobile-menu-links"></div></aside>
+  <main id="main" class="wrap" tabindex="-1"><div class="loading-state" style="flex-direction:column;gap:18px;text-align:center"><span>正在翻开手记…</span><div id="loading-recovery" hidden><p style="font-size:15px;margin-bottom:16px">连接有点慢，部分页面内容还没加载完成。</p><button class="button primary" id="loading-retry" type="button">重新加载</button></div></div></main>
+  <script src="./loading-recovery.js"></script>
+  <footer class="site-footer wrap">
+    <div><span class="footer-motto">慢慢记录，好好生活。</span><span>© <span id="year">2026</span> <span data-site-name>慢慢来</span></span></div>
+    <p>个人博客 · 非官方主题 <span>角色 © <a href="https://www.joguman.com/" target="_blank" rel="noopener noreferrer">JOGUMAN</a></span></p>
+  </footer>
+  <dialog id="search-dialog" class="search-dialog" aria-labelledby="search-title">
+    <div class="search-dialog-top"><h2 id="search-title">找一篇手记</h2><button class="icon-button" id="search-close" aria-label="关闭搜索"></button></div>
+    <label class="search-field"><span id="search-field-icon"></span><input id="search-input" type="search" placeholder="搜搜标题、正文，或者一个小念头…" autocomplete="off" aria-label="搜索关键词"><kbd>ESC</kbd></label>
+    <p class="search-hint" id="search-hint">试试「日常」「咖啡」「旅行」</p>
+    <div id="search-results" aria-live="polite"></div>
+  </dialog>
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+  <button class="back-top icon-button" id="back-top" aria-label="回到顶部" hidden></button>
+  <noscript><p class="wrap">请启用 JavaScript 来阅读博客。所有文章的 Markdown 源文件也保存在 content/posts 文件夹中。</p></noscript>
+</body>
+</html>

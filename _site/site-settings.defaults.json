@@ -1,0 +1,42 @@
+{
+  "schema": 1,
+  "text": {
+    "site.name": { "label": "站点名称", "value": "慢慢来", "fontSize": null },
+    "site.englishName": { "label": "站点英文名", "value": "SLOW NOTES", "fontSize": null },
+    "site.author": { "label": "作者名字", "value": "慢慢", "fontSize": null },
+    "site.description": { "label": "网站简介", "value": "在不紧不慢的日子里，捡起一点点生活的可爱。", "fontSize": null },
+    "site.bio": { "label": "关于自己", "value": "一个认真生活、偶尔发呆的人。", "fontSize": null },
+    "site.currentNote": { "label": "此刻的小事", "value": "在读书，也在等风来", "fontSize": null },
+    "site.location": { "label": "所在地", "value": "在自己的小小世界里", "fontSize": null },
+    "profile.avatar": { "label": "个人头像（留空使用布拉吉奥）", "value": "", "fontSize": null },
+    "hero.line1": { "label": "首页标题第一行", "value": "慢慢生活，", "fontSize": null },
+    "hero.line2": { "label": "首页标题第二行", "value": "好好记录。", "fontSize": null },
+    "hero.description": { "label": "首页介绍", "value": "和布拉吉奥一起，收集日常的小事。\n也给小黑猫金子，留一片晒太阳的地方。", "fontSize": null },
+    "hero.button": { "label": "首页按钮", "value": "去小岛上逛逛", "fontSize": null },
+    "category.收藏.description": { "label": "收藏栏目介绍", "value": "书、票根和让人舍不得丢掉的小东西。", "fontSize": null },
+    "category.出去吃饭.description": { "label": "出去吃饭栏目介绍", "value": "走出门，找到一顿让人开心的饭。", "fontSize": null },
+    "category.在家做饭.description": { "label": "在家做饭栏目介绍", "value": "在厨房里慢慢忙，把日子煮热一点。", "fontSize": null },
+    "category.户外.description": { "label": "户外栏目介绍", "value": "去散步、晒太阳，看看路上的风景。", "fontSize": null },
+    "category.其他.description": { "label": "其他栏目介绍", "value": "那些暂时不知道放在哪里的生活碎片。", "fontSize": null },
+    "category.金子.description": { "label": "金子栏目介绍", "value": "记录小黑猫金子的日常", "fontSize": null },
+    "passport.title": { "label": "护照标题", "value": "生活护照", "fontSize": null },
+    "passport.description": { "label": "护照介绍", "value": "把自己与世界的相遇，收进一本护照。", "fontSize": null },
+    "passport.signature": { "label": "护照签名", "value": "慢慢", "fontSize": null },
+    "passport.nextStop": { "label": "护照下一站", "value": "下一站，等一阵风。", "fontSize": null },
+    "passport.message": { "label": "护照扉页寄语", "value": "收集日常，认真生活。\n下一页，会有新的好事发生。", "fontSize": null },
+    "home.message": { "label": "首页末尾寄语", "value": "愿你今天也遇见一件小小的好事。", "fontSize": null },
+    "footer.motto": { "label": "页脚生活格言", "value": "慢慢记录，好好生活。", "fontSize": null },
+    "footer.notice": { "label": "页脚说明", "value": "个人博客 · 非官方主题", "fontSize": null },
+    "footer.linkLabel": { "label": "页脚来源链接文字", "value": "JOGUMAN", "fontSize": null },
+    "footer.linkUrl": { "label": "页脚来源链接（HTTPS）", "value": "https://www.joguman.com/", "fontSize": null }
+  },
+  "messages": {
+    "收藏": { "missing": ["这一栏的故事，待记录"], "empty": ["这一页还空着，留给下次的小故事。"] },
+    "出去吃饭": { "missing": ["这一栏的故事，待记录"], "empty": ["这一页还空着，留给下次的小故事。"] },
+    "在家做饭": { "missing": ["这一栏的故事，待记录"], "empty": ["这一页还空着，留给下次的小故事。"] },
+    "户外": { "missing": ["这一栏的故事，待记录"], "empty": ["下一张明信片，留给下一次出发。"] },
+    "其他": { "missing": ["这一栏的故事，待记录"], "empty": ["这一页还空着，留给下次的小故事。"] },
+    "金子": { "missing": ["金子的小日子，待记录"], "empty": ["这里留给小黑猫金子的照片和故事。"] }
+  },
+  "passport": { "stamps": [], "order": [] }
+}

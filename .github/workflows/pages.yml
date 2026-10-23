@@ -1,65 +1,85 @@
-name: Deploy blog to GitHub Pages
-
+name: Publish prepared UBHC website
 on:
   push:
     branches: [main]
   workflow_dispatch:
-
 permissions:
   contents: read
   pages: write
   id-token: write
-
 concurrency:
   group: pages
   cancel-in-progress: false
-
 jobs:
   deploy:
-    permissions:
-      contents: write
-      pages: write
-      id-token: write
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 22
-      - uses: actions/setup-python@v5
-        with:
-          python-version: '3.12'
-      - name: Prepare official wallpaper sync
-        continue-on-error: true
-        run: python -m pip install --disable-pip-version-check --timeout 15 'Pillow==13.0.0'
-      - name: Check official wallpaper downloads
-        continue-on-error: true
-        timeout-minutes: 4
-        run: python scripts/update-official-gallery.py --max-new 6 --seconds 150
-      - name: Keep new official covers in the repository
-        continue-on-error: true
+      - name: Verify the prepared public artifact
         shell: bash
         run: |
-          git add -- public/data/hero-gallery.json public/assets/hero-gallery
-          if ! git diff --cached --quiet; then
-            git config user.name 'github-actions[bot]'
-            git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-            git commit -m 'chore: refresh official JOGUMAN covers [skip ci]'
-            # GITHUB_TOKEN pushes do not recursively start this workflow. Never
-            # force-push over an article uploaded while the wallpaper check ran.
-            if ! git push origin HEAD:main; then
-              echo '::warning::New covers are included in this deployment, but could not be saved to main. The next publish will check them again; no existing commit was overwritten.'
-            fi
-          fi
-      - name: Check and build the static blog
-        run: node scripts/check.mjs
+          python3 - <<'PY'
+          import hashlib,json,pathlib,re
+          root=pathlib.Path('_site')
+          m=json.loads(pathlib.Path('github-public.json').read_bytes())
+          assert (m['schema'],m['site'],m['repository'],m['branch'],m['contentProtocol']) == (1,'ubhc','BurgerQueen-xxy/BurgerQueen-xxy.github.io','main','independent-v1')
+          assert re.fullmatch('[a-f0-9]{40}',m['program']['sourceCommit'])
+          expected=m['program']['files']; actual={}
+          for p in root.rglob('*'):
+              assert not p.is_symlink(), 'Symlink in public artifact'
+              if p.is_file(): actual[p.relative_to(root).as_posix()]=p.read_bytes()
+          assert expected and sum(map(len,actual.values())) <= 128*1024*1024
+          for name,digest in expected.items():
+              p=pathlib.PurePosixPath(name)
+              assert not p.is_absolute() and '..' not in p.parts and '\\' not in name
+              assert not re.search(r'(^|/)(admin|editor|cms|router-editor)(/|$)|\.(py|db|sqlite|key|pem)$',name)
+              assert name not in ('content.json','site-settings.json','site-music.json') and not name.startswith(('site-media/','site-settings-media/','site-music/'))
+              assert hashlib.sha256(actual[name]).hexdigest()==digest, name
+          for name,value in actual.items():
+              if name in expected or name in ('content.json','site-settings.json','site-music.json'): continue
+              assert re.fullmatch(r'(site-media|site-settings-media)/[a-f0-9]{64}\.webp|site-music/[a-f0-9]{64}\.(mp3|wav|flac|ogg|m4a)',name), name
+              assert len(value)<=100*1024*1024
+              assert hashlib.sha256(value).hexdigest()==pathlib.PurePosixPath(name).stem
+          site=json.loads(actual['data/site.json'])
+          assert (site['siteId'],site['contentMode'],site['contentProtocol'])==('ubhc','runtime','independent-v1')
+          feed=json.loads(actual['content.json'])
+          assert feed['schema']==1 and feed['site']=='ubhc'
+          for article in feed['articles']:
+              p=pathlib.PurePosixPath(article['path'])
+              assert len(p.parts)==4 and p.parts[:2]==('src','content') and '..' not in p.parts
+              assert pathlib.Path(p).read_bytes().decode('utf-8')==article['source']
+              assert '/api/' not in article['source'] and 'local-media:' not in article['source']
+          settings=json.loads(actual['site-settings.json'])
+          assert settings['schema']==1 and '/api/' not in json.dumps(settings) and 'local-media:' not in json.dumps(settings)
+          music=json.loads(actual.get('site-music.json',b'{"version":null,"tracks":[]}'))
+          assert set(music)=={'version','tracks'} and isinstance(music['tracks'],list) and len(music['tracks'])<=100
+          named=set()
+          for track in music['tracks']:
+              assert set(track)=={'title','artist','src','cover'} and track['cover'] is None
+              assert isinstance(track['title'],str) and isinstance(track['artist'],str)
+              assert re.fullmatch(r'/site-music/[a-f0-9]{64}\.(mp3|wav|flac|ogg|m4a)',track['src'])
+              name=track['src'][1:]
+              assert name in actual and name not in named
+              named.add(name)
+          assert named=={name for name in actual if name.startswith('site-music/')}
+          PY
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
         with:
-          path: dist
+          path: _site
+      - name: Refuse an obsolete publication
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const branch = await github.rest.repos.getBranch({
+              owner: context.repo.owner, repo: context.repo.repo, branch: 'main'
+            });
+            if (branch.data.commit.sha !== context.sha) {
+              core.setFailed('This snapshot has been superseded on main; its deployment is skipped.');
+            }
       - name: Deploy
         id: deployment
         uses: actions/deploy-pages@v4
