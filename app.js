@@ -4,6 +4,7 @@ import { mountPet } from './pet.js';
 import { renderIsland, syncIsland, categoryArt, weatherIcon, renderStoryCards } from './modules/island.js';
 import { mountWidgets, syncWidgets } from './modules/widgets.js';
 import { loadContent } from './content-client.mjs';
+import { mountReadingChrome } from './modules/reading.js';
 
 const icons = {
   arrow: '<path d="M4 12h15m-6-6 6 6-6 6"/>',
@@ -144,6 +145,7 @@ function render() {
   });
   if ($('#search-dialog').open) $('#search-dialog').close();
   window.scrollTo({top:0,behavior:'instant'});
+  readingChrome.reset();
   $('#reading-progress').style.width='0%';
   if (params.get('search')) openSearch(params.get('search'));
 }
@@ -168,7 +170,8 @@ $('#search-field-icon').innerHTML=icon('search');
 $('#back-top').innerHTML=icon('up');
 syncTheme();
 document.addEventListener('slow-theme-change',syncTheme);
-mountPet({trigger:'#pet-toggle'});
+const pet = mountPet({trigger:'#pet-toggle'});
+const readingChrome = mountReadingChrome({pet});
 $('#theme-toggle').addEventListener('click',()=>{
   const dark = document.documentElement.dataset.theme !== 'dark';
   document.documentElement.dataset.theme = dark ? 'dark' : 'light';

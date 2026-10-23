@@ -35,3 +35,9 @@ body[data-page=home] #main.wrap{width:100%;max-width:none;margin:0;padding:0}bod
 .brand>img.brand-ubhc,.nav-passport,.passport-cover>img{mix-blend-mode:normal;background:transparent}
 :root[data-scene-phase=night] body[data-page=home] .site-header:not(.scrolled) .brand>img.brand-ubhc{background:transparent;filter:drop-shadow(0 0 2px #fff9)}
 @media(max-width:700px){.dining-sticker .section-character{width:85px;height:100px}}
+/* The bottom dock steps aside while reading; its layout footprint stays fixed. */
+@media(max-width:850px){
+  body[data-page=post] .site-header .main-nav{transition:transform .22s ease,opacity .18s ease,visibility 0s}
+  body[data-page=post][data-reading-chrome=hidden] .site-header .main-nav{transform:translate(-50%,calc(100% + 32px + env(safe-area-inset-bottom,0px)));opacity:0;visibility:hidden;pointer-events:none;transition-delay:0s,0s,.22s}
+}
+@media(prefers-reduced-motion:reduce){body[data-page=post] .site-header .main-nav{transition:none}}

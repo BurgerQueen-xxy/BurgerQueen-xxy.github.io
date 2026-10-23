@@ -46,7 +46,7 @@ export function mountPet({ trigger = '#pet-toggle' } = {}) {
   const triggerButton = typeof trigger === 'string' ? document.querySelector(trigger) : trigger;
   const controller = new AbortController(), options = { signal: controller.signal };
   let destroyed = false, greetingTimer, transitionTimer, transitionState = null, layoutFrame, gazeFrame;
-  let greetingIndex = 0, drag = null, suppressClickUntil = 0, position = {x:0,y:0}, bounds, obstructed = false;
+  let greetingIndex = 0, drag = null, suppressClickUntil = 0, position = {x:0,y:0}, bounds, obstructed = false, readingHidden = false;
   let eyeGroups = [], gaze = {x:0,y:0}, gazeTarget = {x:0,y:0};
   const greetings = ['嗨，我是布拉吉奥。', '别着急，慢慢来就好。', '一起发一会儿呆吧。'];
   const root = document.createElement('aside');
@@ -77,7 +77,7 @@ export function mountPet({ trigger = '#pet-toggle' } = {}) {
   const pauseButton = root.querySelector('[data-pet-pause]'), hideButton = root.querySelector('[data-pet-hide]');
   const homeButton = root.querySelector('[data-pet-home]'), characterButton = root.querySelector('.brachio-pet__character');
   const artwork = root.querySelector('.brachio-pet__artwork'), speech = root.querySelector('.brachio-pet__speech');
-  const motionAllowed = () => !preferences.paused && !media.matches && !document.hidden;
+  const motionAllowed = () => !preferences.paused && !media.matches && !document.hidden && !readingHidden;
   function save() { try { localStorage.setItem(STORAGE_KEY, JSON.stringify(preferences)); } catch { /* Preferences still work for this page. */ } }
   function viewport() {
     const view = window.visualViewport;
@@ -91,8 +91,17 @@ export function mountPet({ trigger = '#pet-toggle' } = {}) {
     const minX = view.left + Math.max(edge,safe('left'));
     let top = view.top + Math.max(edge,safe('top')), bottom = view.top + view.height - Math.max(edge,safe('bottom'));
     document.querySelectorAll(OBSTACLES).forEach(element => {
-      const css = getComputedStyle(element), rect = element.getBoundingClientRect();
-      if (css.position !== 'fixed' || css.display === 'none' || css.visibility === 'hidden' || !rect.width || !rect.height) return;
+      const css = getComputedStyle(element);
+      let rect = element.getBoundingClientRect();
+      // Keep the navigation's resting footprint while it slides away for reading,
+      // including when the mobile address bar changes the visible viewport.
+      const navBottom = element.matches('.main-nav') ? parseFloat(css.bottom) : NaN;
+      const anchoredNav = css.position === 'fixed' && Number.isFinite(navBottom);
+      if (anchoredNav) {
+        const bottom = view.top + view.height - navBottom;
+        rect = {width:rect.width,height:rect.height,top:bottom-rect.height,bottom};
+      }
+      if (css.position !== 'fixed' || css.display === 'none' || css.visibility === 'hidden' && !anchoredNav || !rect.width || !rect.height) return;
       if (rect.bottom <= view.top || rect.top >= view.top + view.height) return;
       if (element.matches('.site-header') && rect.top <= view.top + 20) top = Math.max(top,rect.bottom+8);
       else if (element.matches('#mobile-menu, [data-pet-obstacle]') || rect.top > view.top + view.height / 2) bottom = Math.min(bottom,rect.top-10);
@@ -120,7 +129,6 @@ export function mountPet({ trigger = '#pet-toggle' } = {}) {
     bounds = readBounds();
     if(transitionState&&previousBounds&&['minX','maxX','minY','maxY','width','height'].some(key=>Math.abs(bounds[key]-previousBounds[key])>.5)) settleTransition();
     place(restorePetPosition(preferences.position,bounds));
-    root.inert = preferences.hidden || obstructed; root.setAttribute('aria-hidden',String(preferences.hidden || obstructed));
     if (obstructed) { speech.hidden=true;resetGaze(); }
     sync();
   }
@@ -163,13 +171,15 @@ export function mountPet({ trigger = '#pet-toggle' } = {}) {
     const label=media.matches?'已按系统设置减少动画':paused?'继续动画':'暂停动画';
     pauseButton.setAttribute('aria-label',label);pauseButton.title=label;
     pauseButton.innerHTML=paused?'<svg viewBox="0 0 20 20" aria-hidden="true"><path d="m7 5 7 5-7 5Z"/></svg>':'<svg viewBox="0 0 20 20" aria-hidden="true"><path d="M7 5v10M13 5v10"/></svg>';
-    root.classList.toggle('brachio-pet--paused',paused); root.inert=preferences.hidden||obstructed||Boolean(transitionState);
-    root.setAttribute('aria-hidden',String(preferences.hidden||obstructed||Boolean(transitionState)));
+    root.classList.toggle('brachio-pet--paused',paused);
+    root.classList.toggle('brachio-pet--reading-hidden',readingHidden);
+    root.inert=preferences.hidden||readingHidden||obstructed||Boolean(transitionState);
+    root.setAttribute('aria-hidden',String(preferences.hidden||readingHidden||obstructed||Boolean(transitionState)));
     if(triggerButton) {
       triggerButton.setAttribute('aria-controls',root.id);triggerButton.setAttribute('aria-pressed',String(!preferences.hidden));
       const label=preferences.hidden?'显示布拉吉奥':'隐藏布拉吉奥';triggerButton.setAttribute('aria-label',label);triggerButton.title=label;
     }
-    if(paused||preferences.hidden||document.hidden||obstructed) resetGaze();
+    if(paused||preferences.hidden||readingHidden||document.hidden||obstructed) resetGaze();
   }
   function clearTransition() {clearTimeout(transitionTimer);transitionTimer=null;transitionState=null;root.dataset.petTransition='idle';root.classList.remove('brachio-pet--entering','brachio-pet--leaving');}
   function settleTransition() {clearTransition();root.hidden=preferences.hidden;}
@@ -191,8 +201,22 @@ export function mountPet({ trigger = '#pet-toggle' } = {}) {
     const visible=candidates.find(button=>button.getClientRects().length&&!button.closest('[hidden]'));
     (visible||document.querySelector('#main'))?.focus({preventScroll:true});
   }
+  // Reading suppression is transient; the user's visibility and drag position stay saved.
+  function setReadingHidden(hidden) {
+    hidden=Boolean(hidden);
+    if(destroyed||readingHidden===hidden) return;
+    readingHidden=hidden;
+    if(hidden) {clearTimeout(greetingTimer);speech.hidden=true;resetGaze();}
+    sync();
+  }
+  function revealForInteraction() {
+    if(!readingHidden) return;
+    setReadingHidden(false);
+    document.dispatchEvent(new CustomEvent('brachio-pet-reveal'));
+  }
   function setHidden(hidden,restoreFocus=false) {
     if(destroyed) return;
+    if(!hidden) revealForInteraction();
     const changed=preferences.hidden!==hidden; preferences.hidden=hidden;
     finishDrag(false);clearTransition();resetGaze();
     if(hidden) {
@@ -209,13 +233,13 @@ export function mountPet({ trigger = '#pet-toggle' } = {}) {
   }
   function setPaused(paused) {preferences.paused=paused;if(paused)settleTransition();save();sync();}
   function speak(message,duration=3500) {
-    if(preferences.hidden||obstructed) return;
+    if(preferences.hidden||readingHidden||obstructed) return;
     clearTimeout(greetingTimer);speech.textContent=message;speech.hidden=false;placeSpeech();
     greetingTimer=setTimeout(()=>{speech.hidden=true;},duration);
   }
-  function greet() {if(preferences.hidden)setHidden(false);speak(greetings[greetingIndex++%greetings.length]);}
+  function greet() {revealForInteraction();if(preferences.hidden)setHidden(false);speak(greetings[greetingIndex++%greetings.length]);}
   function startDrag(event) {
-    if(!event.isPrimary||event.button!==0||preferences.hidden||drag||transitionState) return;
+    if(!event.isPrimary||event.button!==0||preferences.hidden||readingHidden||drag||transitionState) return;
     settleTransition();resetGaze();bounds=readBounds();
     drag={id:event.pointerId,startX:event.clientX,startY:event.clientY,origin:{...position},saved:preferences.position?{...preferences.position}:null,moved:false};
     characterButton.setPointerCapture(event.pointerId);characterButton.focus({preventScroll:true});
@@ -287,7 +311,8 @@ export function mountPet({ trigger = '#pet-toggle' } = {}) {
   connectEyes();
   const originalImage=root.querySelector('.brachio-pet__still');
   const ready=originalImage.decode().then(()=>{if(destroyed)return;root.classList.add('brachio-pet--ready');sync();}).catch(()=>{if(!destroyed)root.classList.remove('brachio-pet--ready');});
-  mountedPet={ready,show:()=>setHidden(false),hide:()=>setHidden(true,true),toggle:()=>setHidden(!preferences.hidden,true),pause:()=>setPaused(true),play:()=>setPaused(false),greet,resetPosition,moveBy,
+  mountedPet={ready,show:()=>setHidden(false),hide:()=>setHidden(true,true),toggle:()=>setHidden(!preferences.hidden,true),pause:()=>setPaused(true),play:()=>setPaused(false),greet,resetPosition,moveBy,setReadingHidden,
+    get interacting(){return Boolean(drag||transitionState);},
     destroy(){destroyed=true;controller.abort();clearTimeout(greetingTimer);clearTransition();cancelAnimationFrame(layoutFrame);resetGaze();finishDrag(false);resizeObserver?.disconnect();mutationObserver.disconnect();root.remove();triggerButton?.removeAttribute('aria-controls');triggerButton?.removeAttribute('aria-pressed');mountedPet=undefined;},
   };
   return mountedPet;
