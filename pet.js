@@ -9,6 +9,23 @@ const clamp = (number, min, max) => Math.min(max, Math.max(min, number));
 const finite = value => typeof value === 'number' && Number.isFinite(value);
 let mountedPet;
 
+/** A small 2D head rig: source pixels move together; feet and arms stay planted. */
+export function headPose(x, y) {
+  const turn = clamp(x, -1, 1), nod = clamp(y, -1, 1);
+  const angle = clamp(turn * 6 - nod * 12, -15, 15);
+  const dx = turn * 8, dy = nod * 3;
+  const radians = angle * Math.PI / 180, cos = Math.cos(radians), sin = Math.sin(radians);
+  const point = (px, py) => ({x:100 + dx + (px-100)*cos - (py-108)*sin, y:108 + dy + (px-100)*sin + (py-108)*cos});
+  const left = point(67, 100), right = point(138, 100);
+  const leftTangent = point(65.8, 110), rightTangent = point(136.8, 110);
+  const pair = p => `${p.x.toFixed(3)} ${p.y.toFixed(3)}`;
+  return {
+    transform:`translate(${dx.toFixed(3)} ${dy.toFixed(3)}) rotate(${angle.toFixed(3)} 100 108)`,
+    // Overlap the cropped head and body so antialiasing cannot open a neck seam.
+    neck:`M ${pair(left)} L ${pair(right)} C ${pair(rightTangent)} 136.5 119 135.5 129 L 63.5 129 C 64.5 119 ${pair(leftTangent)} ${pair(left)} Z`,
+  };
+}
+
 /** Pixel coordinates are kept inside the visible, unobstructed viewport. */
 export function constrainPetPosition(point, bounds) {
   return {
@@ -47,7 +64,7 @@ export function mountPet({ trigger = '#pet-toggle' } = {}) {
   const controller = new AbortController(), options = { signal: controller.signal };
   let destroyed = false, greetingTimer, transitionTimer, transitionState = null, layoutFrame, gazeFrame;
   let greetingIndex = 0, drag = null, suppressClickUntil = 0, position = {x:0,y:0}, bounds, obstructed = false, readingHidden = false;
-  let eyeGroups = [], gaze = {x:0,y:0}, gazeTarget = {x:0,y:0};
+  let eyeGroups = [], headGroup, neckBridge, gaze = {x:0,y:0}, gazeTarget = {x:0,y:0}, gazeTime = 0;
   const greetings = ['嗨，我是布拉吉奥。', '别着急，慢慢来就好。', '一起发一会儿呆吧。'];
   const root = document.createElement('aside');
   root.className = 'brachio-pet'; root.id = 'brachio-pet'; root.setAttribute('aria-label', '布拉吉奥小伙伴');
@@ -65,10 +82,18 @@ export function mountPet({ trigger = '#pet-toggle' } = {}) {
         <span class="brachio-pet__passage"><span class="brachio-pet__walker"><span class="brachio-pet__artwork" aria-hidden="true">
           <img class="brachio-pet__still" src="${stillUrl}" alt="" width="186" height="360" draggable="false">
           <svg class="brachio-pet__standing" viewBox="0 0 186 360" preserveAspectRatio="xMidYMax meet" focusable="false" xmlns="http://www.w3.org/2000/svg">
-            <defs><clipPath id="brachio-pet-eye-crop"><rect x="64" y="33" width="12" height="12"/></clipPath></defs>
-            <image href="${stillUrl}" width="186" height="360"/>
-            <rect x="64" y="33" width="12" height="12" fill="#27b67c"/>
-            <g data-pet-gaze><g clip-path="url(#brachio-pet-eye-crop)"><image href="${stillUrl}" width="186" height="360"/></g></g>
+            <defs>
+              <clipPath id="brachio-pet-eye-crop"><rect x="64" y="33" width="12" height="12"/></clipPath>
+              <clipPath id="brachio-pet-head-crop"><rect width="186" height="108"/></clipPath>
+              <clipPath id="brachio-pet-body-crop"><rect y="126" width="186" height="234"/></clipPath>
+            </defs>
+            <path data-pet-neck fill="#27b67c"/>
+            <image href="${stillUrl}" width="186" height="360" clip-path="url(#brachio-pet-body-crop)"/>
+            <g data-pet-head>
+              <image href="${stillUrl}" width="186" height="360" clip-path="url(#brachio-pet-head-crop)"/>
+              <rect x="64" y="33" width="12" height="12" fill="#27b67c"/>
+              <g data-pet-gaze><g clip-path="url(#brachio-pet-eye-crop)"><image href="${stillUrl}" width="186" height="360"/></g></g>
+            </g>
           </svg>
         </span></span></span>
       </button>
@@ -143,27 +168,41 @@ export function mountPet({ trigger = '#pet-toggle' } = {}) {
     preferences.position=normalizePetPosition(position,bounds);save();resetGaze();sync();
   }
   function applyGaze() {
-    eyeGroups.forEach((group,index)=>group.setAttribute('transform',`translate(${(gaze.x*(index===0 ? .85 : 1)).toFixed(3)} ${gaze.y.toFixed(3)})`));
+    const pose = headPose(gaze.x, gaze.y);
+    headGroup?.setAttribute('transform',pose.transform);
+    neckBridge?.setAttribute('d',pose.neck);
+    eyeGroups.forEach(group=>group.setAttribute('transform',`translate(${(gaze.x*4).toFixed(3)} ${(gaze.y*3).toFixed(3)})`));
   }
-  function resetGaze() {cancelAnimationFrame(gazeFrame);gazeFrame=null;gaze={x:0,y:0};gazeTarget={x:0,y:0};applyGaze();}
-  function stepGaze() {
+  function resetGaze() {cancelAnimationFrame(gazeFrame);gazeFrame=null;gazeTime=0;gaze={x:0,y:0};gazeTarget={x:0,y:0};applyGaze();}
+  function scheduleGaze() {if(!gazeFrame){gazeTime=performance.now();gazeFrame=requestAnimationFrame(stepGaze);}}
+  function stepGaze(time) {
     gazeFrame=null;
     if(!motionAllowed() || preferences.hidden || obstructed || drag || transitionState) {resetGaze();return;}
-    gaze.x+=(gazeTarget.x-gaze.x)*.22;gaze.y+=(gazeTarget.y-gaze.y)*.22;applyGaze();
-    if(Math.abs(gazeTarget.x-gaze.x)+Math.abs(gazeTarget.y-gaze.y)>.025) gazeFrame=requestAnimationFrame(stepGaze);
+    const ease=1-Math.exp(-Math.min(64,Math.max(1,time-gazeTime))/110);gazeTime=time;
+    gaze.x+=(gazeTarget.x-gaze.x)*ease;gaze.y+=(gazeTarget.y-gaze.y)*ease;
+    if(Math.abs(gazeTarget.x-gaze.x)+Math.abs(gazeTarget.y-gaze.y)>.001) gazeFrame=requestAnimationFrame(stepGaze);
+    else gaze={...gazeTarget};
+    applyGaze();
   }
   function lookAt(event) {
     if(!eyeGroups.length || event.pointerType==='touch' || !motionAllowed() || preferences.hidden || obstructed || drag || transitionState) return;
     const rect=artwork.getBoundingClientRect(), scale=Math.min(rect.width/186,rect.height/360);
     const eyeX=rect.left+(rect.width-186*scale)/2+70*scale, eyeY=rect.bottom-360*scale+39*scale;
-    const distance=Math.max(140,viewport().width*.2);
-    gazeTarget={x:clamp((event.clientX-eyeX)/distance,-1,1)*5.5,y:clamp((event.clientY-eyeY)/distance,-1,1)*4};
-    if(!gazeFrame) gazeFrame=requestAnimationFrame(stepGaze);
+    const view=viewport(), dx=event.clientX-eyeX, dy=event.clientY-eyeY;
+    // Soft limits continue responding across the screen instead of saturating.
+    gazeTarget={x:dx/Math.hypot(dx,Math.max(100,view.width*.26)),y:dy/Math.hypot(dy,Math.max(100,view.height*.3))};
+    scheduleGaze();
+  }
+  function restGaze() {
+    gazeTarget={x:0,y:0};
+    if(motionAllowed()&&!preferences.hidden&&!obstructed&&!drag&&!transitionState) scheduleGaze();
+    else resetGaze();
   }
   function connectEyes() {
     // Reuse the original PNG's eye pixels instead of drawing a replacement eye.
     eyeGroups=[...artwork.querySelectorAll('[data-pet-gaze]')];
-    root.dataset.gazeReady=String(eyeGroups.length===1);resetGaze();
+    headGroup=artwork.querySelector('[data-pet-head]');neckBridge=artwork.querySelector('[data-pet-neck]');
+    root.dataset.gazeReady=String(eyeGroups.length===1&&Boolean(headGroup)&&Boolean(neckBridge));resetGaze();
   }
   function sync() {
     const paused=preferences.paused||media.matches;
@@ -287,7 +326,7 @@ export function mountPet({ trigger = '#pet-toggle' } = {}) {
     else if(event.key==='Escape'){event.preventDefault();if(drag){finishDrag(true);speak('好，还是待在原来的地方。',2000);}else setHidden(true,true);}
   },options);
   document.addEventListener('pointermove',lookAt,{...options,passive:true});
-  document.documentElement.addEventListener('pointerleave',resetGaze,options);
+  document.documentElement.addEventListener('pointerleave',restGaze,options);
   window.addEventListener('blur',()=>{finishDrag(false);settleTransition();resetGaze();sync();},options);
   document.addEventListener('visibilitychange',()=>{finishDrag(false);settleTransition();resetGaze();sync();},options);
   media.addEventListener('change',()=>{settleTransition();resetGaze();sync();},options);
